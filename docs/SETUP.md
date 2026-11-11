@@ -1,6 +1,6 @@
 # 새 프로젝트 배포 절차
 
-쉬운 설명은 [README](../README.md)의 "새 앱 만들기"를 먼저 본다. 이 문서는 Claude가 따라 하는 자세한 순서다.
+쉬운 설명은 [README](../README.md). AI가 처음부터 끝까지 진행할 때는 [AGENT_SETUP.md](AGENT_SETUP.md). 이 문서는 D1 모드를 토큰으로 설정하는 자세한 순서와 함정 모음이다.
 
 이 틀로 만든 앱은 아래 구성으로 돈다. 처음 한 번만 설정하면 이후에는 `main`에 올릴 때마다 자동 배포된다.
 
@@ -34,3 +34,9 @@ GitHub Actions (매일) ── jobs/daily.py ──▶ D1 REST API
 - **Worker 이름과 `wrangler.toml`의 `name`이 달라도** 문제가 생길 수 있다. 같은 이름을 쓴다.
 - **공개 저장소에 비밀을 올리지 않는다.** 계정 ID와 D1 ID는 비밀이 아니다. 토큰과 편집 암호만 비밀이다.
 - **Claude Code 클라우드 세션에서 작업할 때**: Cloudflare API, 사이트 주소는 환경의 허용 목록에 있어야 접속된다. 토큰은 채팅에 붙이지 말고 Claude가 띄우는 입력 카드에 넣는다.
+- **Supabase 무료 플랜은 계정당 프로젝트 2개.** 조직이 달라도 합쳐서 센다. 일시 정지한 프로젝트는 세지 않지만, 정지하면 그 서비스가 멈추고 90일이 지나면 복구가 어려울 수 있다.
+- **Supabase "Confirm email"은 꺼 둔다.** 켜져 있으면 가입해도 확인 메일 없이는 로그인할 수 없다. 기본 메일 발송은 제한이 크다.
+- **Supabase 화면에는 publishable(또는 legacy anon) 키만 넣는다.** secret, service_role 키가 화면에 들어가면 RLS를 무시하고 모든 데이터를 읽고 쓸 수 있다. `check_site.mjs`가 이를 잡아낸다.
+- **표를 만들면 RLS를 켠다.** 화면이 공개 키로 직접 연결하므로, RLS가 없는 표는 누구나 읽고 쓴다. Supabase MCP의 `get_advisors`(security)로 확인한다.
+- **claude.ai의 "Cloudflare Developer Platform" 커넥터는 지원 종료 예정이다.** D1과 Worker 조회만 되고 배포는 안 된다. 배포는 `wrangler`로 한다.
+- **`workers.dev`는 브라우저 검사를 한다.** 기본 Python `urllib` 요청은 1010 오류로 막힌다. 스크립트에서 사이트를 부를 때는 앱 이름이 담긴 User-Agent를 붙인다.

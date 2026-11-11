@@ -12,7 +12,8 @@ export default {
   async fetch(request, env, ctx) {
     const path = new URL(request.url).pathname.replace(/\/+$/, '');
     const route = ROUTES[path];
-    if (!route) return env.ASSETS.fetch(request);
+    // Supabase 모드(D1 없음)에서는 /api/doc을 쓰지 않는다.
+    if (!route || (route === doc && !env.DB)) return env.ASSETS.fetch(request);
     const handler = route[request.method];
     if (!handler) return json({ detail: '허용하지 않는 요청 방식입니다.' }, 405);
     try {

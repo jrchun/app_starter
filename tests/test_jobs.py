@@ -76,3 +76,33 @@ class CloudflareTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class UseSupabaseTests(unittest.TestCase):
+    """scripts/use_supabase.py: 임시 복사본에서 Supabase 모드 전환을 확인한다."""
+
+    def run_script(self, *args):
+        import shutil, subprocess, sys
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        d = tempfile.mkdtemp()
+        dst = os.path.join(d, "repo")
+        shutil.copytree(root, dst, ignore=shutil.ignore_patterns(".git", ".wrangler", "node_modules", "__pycache__"))
+        p = subprocess.run([sys.executable, "scripts/use_supabase.py", *args], cwd=dst, capture_output=True, text=True)
+        return dst, p
+
+    def test_switches_to_supabase_mode(self):
+        url, key = "https://abcdefghijklmnopqrst.supabase.co", "sb_publishable_test"
+        dst, p = self.run_script("--url", url, "--key", key)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        cfg = open(os.path.join(dst, "web/js/config.js"), encoding="utf-8").read()
+        self.assertIn(url, cfg); self.assertIn(key, cfg)
+        self.assertNotIn("d1_databases", open(os.path.join(dst, "wrangler.toml"), encoding="utf-8").read())
+        wf = os.listdir(os.path.join(dst, ".github/workflows"))
+        self.assertEqual(wf, ["supabase-keepalive.yml"])
+        self.assertFalse(os.path.exists(os.path.join(dst, "web/js/docsync.js")))
+        self.assertTrue(os.path.exists(os.path.join(dst, "web/vendor-supabase.js")))
+
+    def test_refuses_secret_key(self):
+        _, p = self.run_script("--url", "https://abcdefghijklmnopqrst.supabase.co", "--key", "sb_secret_nope")
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("서비스 키", p.stderr)
