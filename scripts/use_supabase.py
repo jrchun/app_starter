@@ -37,6 +37,7 @@ def main(argv=None) -> int:
         (web / name).unlink(missing_ok=True)
     shutil.copy(EX / "web" / "index.html", web / "index.html")
     shutil.copy(EX / "web" / "vendor-supabase.js", web / "vendor-supabase.js")
+    # 라이선스 출처 표시는 저장소 맨 위 THIRD_PARTY_NOTICES.md에 있다(이 파일 맨 위 주석이 그 문서를 가리킨다).
     shutil.copy(EX / "web" / "js" / "app.js", web / "js" / "app.js")
     cfg = (EX / "web" / "js" / "config.js").read_text(encoding="utf-8")
     (web / "js" / "config.js").write_text(cfg.replace("__SUPABASE_URL__", url).replace("__SUPABASE_PUBLISHABLE_KEY__", key), encoding="utf-8")

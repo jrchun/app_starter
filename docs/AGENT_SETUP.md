@@ -18,13 +18,16 @@
 | 서비스 | 1순위 | 2순위 |
 |---|---|---|
 | GitHub | 클라이언트에 기본 연결된 GitHub 도구 | `gh` (내 컴퓨터, `gh auth status`로 확인) |
-| Cloudflare | `npx wrangler@4 login` (내 컴퓨터, 브라우저 로그인) | Cloudflare MCP `https://mcp.cloudflare.com/mcp`, 또는 API 토큰(D1 Edit + Workers Scripts Edit)을 클라이언트 비밀 입력 칸으로 받아 `CLOUDFLARE_API_TOKEN` |
+| Cloudflare 배포 | 내 컴퓨터: `npx wrangler@4 login` (브라우저 로그인) | 클라우드 세션: 배포 토큰(아래)을 클라이언트의 비밀 입력 칸으로 받아 `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`로 `wrangler` 실행 |
+| Cloudflare 조회·관리 | Cloudflare API MCP `https://mcp.cloudflare.com/mcp` (OAuth, Cloudflare 권장) | wrangler 명령 |
 | Supabase (Supabase 모드만) | Supabase MCP `https://mcp.supabase.com/mcp` (OAuth) | 개인 액세스 토큰 `SUPABASE_ACCESS_TOKEN` + 관리 API |
 
 - Claude Code: 저장소의 `.mcp.json`에 Cloudflare·Supabase MCP가 적혀 있다. 처음 열면 승인을 묻고, 첫 사용 때 브라우저 로그인 창이 뜬다.
 - Codex: `codex mcp add supabase --url https://mcp.supabase.com/mcp` → `codex mcp login supabase` (Cloudflare도 같은 방식). 자세한 것은 `AGENTS.md`.
 - 연결이 안 되면 무엇이 막혔는지 그대로 말하고, 2순위 방법을 안내한다.
-- 참고: claude.ai의 "Cloudflare Developer Platform" 커넥터는 지원 종료 예정이다. D1과 Worker **조회**만 되고 **배포는 안 된다**.
+- claude.ai(웹·클라우드 세션)에서 Cloudflare MCP 쓰기: 설정 › 커넥터 › **사용자 지정 커넥터 추가** › URL `https://mcp.cloudflare.com/mcp` → 로그인. 디렉터리의 "Cloudflare Developer Platform" 커넥터는 **지원 종료 예정**(D1·Worker 조회만, 배포 불가)이라 쓰지 않는다.
+- **배포 토큰**(클라우드 세션용): Cloudflare › Account API tokens › 만들기 › 사용자 지정. 권한은 **Workers Scripts Edit**, **D1 Edit**, 범위는 내 계정. 값은 한 번만 보이니 바로 클라이언트의 비밀 입력 칸에 넣는다(채팅 금지). 같은 토큰을 GitHub 비밀 `CLOUDFLARE_API_TOKEN`으로도 쓸 수 있다.
+- 토큰으로 wrangler를 쓸 때는 `CLOUDFLARE_ACCOUNT_ID`도 함께 준다(계정 ID는 비밀이 아니다. `wrangler.toml` 옆 워크플로나 대시보드 개요에 있다).
 
 ## 2. 사람에게 물을 것 (처음에 한 번에)
 

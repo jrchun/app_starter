@@ -116,6 +116,7 @@ Claude가 단계마다 안내합니다. 사람이 할 일은 아래 다섯 가�
 - 라이트·다크 색 변수, 폰(400px) 기준 레이아웃
 - `scripts/setup_cloudflare.py`(D1 생성·스키마·ID 채우기), `scripts/check_site.mjs`(배포 검사), 테스트
 - 작업 규칙은 [`CLAUDE.md`](CLAUDE.md), 배포 절차와 함정은 [`docs/SETUP.md`](docs/SETUP.md)
+- 포함된 외부 코드(Supabase 브라우저 라이브러리, MIT)의 출처: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
 
 ```
 npm test                                                  # 테스트
