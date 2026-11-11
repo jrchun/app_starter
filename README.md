@@ -1,6 +1,82 @@
-# 새 프로젝트 시작 틀
+# 앱 시작 틀 (app_starter)
 
-1명~수십 명이 쓰는 작은 웹 도구를 빠르게 배포하기 위한 틀. "내 리밸런싱 보드"를 배포하며 정리한 구성이다.
+나와 친구 몇 명이 쓰는 **작은 웹 앱**을 Claude Code로 만들고, 무료로 인터넷에 올리기 위한 틀입니다.
+개발을 몰라도 아래 순서만 따라 하면 됩니다. 코드는 Claude가 쓰고, 사람은 버튼 몇 번과 비밀번호 두 개만 넣습니다.
+
+> 예: 가계부, 운동 기록, 모임 회비 장부, 투자 비중 계산기처럼 "나(와 몇 명)만 쓰는 도구"에 맞습니다.
+> 회원가입·결제가 필요한 큰 서비스에는 맞지 않습니다.
+
+---
+
+## 준비물 (처음 한 번)
+
+| 필요한 것 | 비용 | 용도 |
+|---|---|---|
+| GitHub 계정 | 무료 | 코드 보관 |
+| Cloudflare 계정 | 무료 | 사이트를 인터넷에 올림 |
+| Claude Code (claude.ai) | 구독 | 코드를 대신 써 줌 |
+
+세 서비스 모두 **본인 계정**을 씁니다. 이 틀을 만든 사람의 계정이나 데이터와는 전혀 연결되지 않습니다.
+
+---
+
+## 새 앱 만들기
+
+### 1. 내 저장소 만들기 (1분)
+
+1. 이 페이지 위쪽 초록색 **Use this template** 버튼 › **Create a new repository**
+2. Owner는 내 계정, Repository name은 앱 이름을 영문 소문자와 하이픈으로 (예: `gym-log`)
+3. Public / Private 아무거나 고르고 **Create repository**
+
+> 버튼이 안 보이면 GitHub에 로그인했는지 확인하세요.
+
+### 2. Claude Code에서 시작하기
+
+1. claude.ai/code에서 새 세션을 열고, 방금 만든 저장소를 고릅니다.
+2. 만들고 싶은 것을 평소 말투로 적습니다.
+
+   > 운동 기록 앱을 만들고 싶어. 날짜별로 종목·무게·횟수를 적고, 이번 주 합계를 보여 줘. 폰에서 주로 쓸 거야.
+
+3. Claude가 만들고, 테스트하고, 화면 캡처까지 확인한 뒤 보고합니다. 마음에 안 드는 곳은 그대로 말하면 고칩니다.
+
+### 3. 인터넷에 올리기 (처음 한 번, 15분 정도)
+
+Claude가 단계마다 안내합니다. 사람이 할 일은 아래 다섯 가지입니다. 자세한 순서와 흔한 실수는 [`docs/SETUP.md`](docs/SETUP.md)에 있습니다.
+
+| # | 할 일 | 어디서 |
+|---|---|---|
+| ① | **Cloudflare API 토큰** 만들기 (권한: D1 Edit). Claude가 띄우는 입력 카드에 붙여 넣기 | Cloudflare › Account API tokens |
+| ② | Claude에게 "배포 준비해 줘" → Claude가 데이터베이스를 만들고 설정 파일을 채움 | Claude Code |
+| ③ | Cloudflare에서 **Workers** 만들기 › Git 연결 › 내 저장소, 이름은 ②에서 정한 앱 이름과 똑같이 | Cloudflare › Workers 및 Pages |
+| ④ | Worker › 설정 › 변수 및 비밀 › **Secret** `WRITE_TOKEN` = 내가 정한 **편집 암호** | Cloudflare |
+| ⑤ | (매일 자동 작업이 있는 앱만) GitHub › Settings › Secrets and variables › Actions › **Secrets 탭** › `CLOUDFLARE_API_TOKEN` = ①의 토큰 | GitHub |
+
+끝나면 Claude가 사이트(`https://앱이름.내계정.workers.dev`)를 직접 검사하고 결과를 알려 줍니다.
+마지막으로 폰에서 사이트를 열어 아무 값이나 고치고, 편집 암호를 한 번 넣어 **"저장됨"**이 뜨면 완성입니다.
+
+> **꼭 기억할 것**
+> - **Pages가 아니라 Workers**로 만드세요. Pages로 만들면 배포가 실패합니다.
+> - **토큰은 만들 때 한 번만 보입니다.** 바로 복사하세요. 놓쳤으면 토큰 목록의 `…` › Roll로 다시 받습니다.
+> - 토큰과 편집 암호는 **채팅에 붙여 넣지 마세요.** Claude가 띄우는 입력 카드나 각 서비스 설정 화면에만 넣습니다.
+
+### 4. 그다음부터
+
+- 고치고 싶으면 Claude에게 말하면 됩니다. 저장소에 반영되면 사이트가 자동으로 바뀌고, Claude가 실제 사이트를 확인합니다.
+- 사이트 주소를 친구에게 보내면 **누구나 볼 수 있고**, **편집 암호를 아는 사람만 고칠 수 있습니다.**
+- 편집 암호는 기기마다 처음 한 번만 넣으면 그 기기에 기억됩니다.
+
+---
+
+## 알아 두면 좋은 것
+
+- **비용**: 작은 개인 앱이면 Cloudflare와 GitHub 무료 범위 안에서 충분합니다.
+- **데이터는 공개입니다**: 사이트 주소를 아는 사람은 내용을 볼 수 있습니다. 남에게 보이면 안 되는 정보(주민번호, 계좌 비밀번호 등)는 넣지 마세요.
+- **백업**: Claude에게 "데이터 백업해 줘"라고 하면 데이터베이스를 파일로 내려받는 방법을 안내합니다.
+- **틀이 좋아지면**: 이 저장소가 바뀌어도 이미 만든 내 앱에는 자동으로 반영되지 않습니다. 필요한 부분만 Claude에게 옮겨 달라고 하세요.
+
+---
+
+## 안에 들어 있는 것 (Claude와 개발자용)
 
 | 역할 | 무엇으로 | 위치 |
 |---|---|---|
@@ -9,22 +85,16 @@
 | 저장 | Cloudflare D1 (SQLite) | `db/schema.sql` |
 | 매일 작업 | GitHub Actions + Python | `jobs/`, `.github/workflows/daily.yml` |
 
-기본으로 들어 있는 것
 - 문서 하나를 저장하는 API(`/api/doc`): 버전 관리, 다른 기기 동시 수정 시 409, 편집 암호 없으면 401
-- 화면 쪽 동기화 모듈(`web/js/docsync.js`): 0.7초 뒤 자동 저장, 충돌 시 최신으로 교체, 화면 안 편집 암호 입력칸
+- 화면 동기화 모듈(`web/js/docsync.js`): 0.7초 뒤 자동 저장, 충돌 시 최신으로 교체, 화면 안 편집 암호 입력칸
 - 라이트·다크 색 변수, 폰(400px) 기준 레이아웃
-- Cloudflare 준비 스크립트, 배포 확인 스크립트, 테스트
-
-비용: Workers·D1·공개 저장소 Actions 모두 무료 범위(작은 개인 도구 기준).
-
-## 시작하기
-
-[`docs/SETUP.md`](docs/SETUP.md)의 순서를 따른다. 사람이 할 일은 토큰 발급, 대시보드 연결, 비밀 두 개 넣기뿐이고 나머지는 Claude Code가 한다.
+- `scripts/setup_cloudflare.py`(D1 생성·스키마·ID 채우기), `scripts/check_site.mjs`(배포 검사), 테스트
+- 작업 규칙은 [`CLAUDE.md`](CLAUDE.md), 배포 절차와 함정은 [`docs/SETUP.md`](docs/SETUP.md)
 
 ```
 npm test                                                  # 테스트
 cp .dev.vars.example .dev.vars
 npx wrangler@4 d1 execute my-app --local --file db/schema.sql
 npx wrangler@4 dev                                        # http://localhost:8787
-npm run check -- https://my-app.<계정>.workers.dev        # 배포 확인
+npm run check -- https://my-app.<계정>.workers.dev        # 배포 검사
 ```
