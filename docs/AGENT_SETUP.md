@@ -87,4 +87,8 @@
 
 - D1 모드: 로컬 실행에서 저장·편집 암호·충돌·400px 확인. 같은 구성의 실제 배포(리밸런싱 보드)에서 `workers.dev` 동작 확인.
 - Supabase 모드: Supabase MCP로 프로젝트 생성(서울) → 스키마 적용 → 키 조회 → `use_supabase.py` → 로컬 실행. 로그인, 메모 추가·삭제, 다른 계정에서는 안 보임(RLS), 새로고침 뒤 로그인 유지, `check_site.mjs` 전부 ok.
+- D1 모드 클라우드 세션 배포(`starter-test`, 배포 토큰 없이 Cloudflare MCP만 사용): `whoami`·계정·Worker·D1 조회 → D1 생성(apac)·스키마 적용 → Worker 업로드 → `workers.dev` 켜기까지 MCP로 됨. `check_site.mjs` 전부 ok(편집 암호 미설정 경고만), 400px 라이트·다크 확인.
+  - 함정 1: MCP 실행 환경은 api.cloudflare.com 요청에 로그인 정보를 강제로 붙여서, 정적 자산 업로드(`/workers/assets/upload`, 업로드용 JWT만 받음)가 401로 실패한다. 그래서 `web/` 파일을 텍스트 모듈로 Worker에 묶고 `env.ASSETS`를 흉내 내는 연결 파일(entry.js)로 배포했다. 저장소 코드는 그대로이고, 나중에 Git 자동 배포나 `wrangler deploy`를 하면 정상 정적 자산 구성으로 바뀐다.
+  - 함정 2: 클라우드 세션의 네트워크 정책이 api.cloudflare.com과 `*.workers.dev`를 막는다(wrangler·`check_site.mjs` 모두 실패). MCP 실행 환경의 fetch도 Cloudflare API 밖으로는 403. 확인하려면 이 저장소용 환경에 사이트 주소(예: `starter-test.jrchun1.workers.dev`)를 허용 호스트로 넣는다.
+  - 편집 암호(WRITE_TOKEN)는 MCP로 넣지 않는다(AI가 값을 보게 되므로). 사람이 대시보드 › Worker › 설정 › 변수 및 비밀 › Secret으로 넣는다.
 - 아직 확인하지 못한 것: `gh repo create --template`, `wrangler login`·`wrangler deploy`를 이 흐름에서 처음부터 실행, Codex에서 MCP 연결.
