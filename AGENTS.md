@@ -12,8 +12,9 @@ codex mcp add cloudflare --url https://mcp.cloudflare.com/mcp
 codex mcp login cloudflare
 ```
 
-Codex 안에서 `/mcp`로 연결을 확인한다. Cloudflare 배포는 `npx wrangler@4 login` 후 `npx wrangler@4 deploy`가 가장 단순하다.
-토큰·비밀번호는 채팅으로 받지 않는다.
+Codex 안에서 `/mcp`로 연결을 확인한다. API 토큰은 만들지 않는다.
+Cloudflare 준비·첫 배포는 `node scripts/cf_mcp.mjs prepare|fill|deploy`가 만든 코드를 Cloudflare MCP `execute`로 실행한다(`docs/AGENT_SETUP.md` 5~6). 이후 배포는 `main`에 올리면 Cloudflare가 한다.
+비밀번호(편집 암호)는 채팅으로 받지 않는다.
 
 ## 확인 명령
 

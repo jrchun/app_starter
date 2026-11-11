@@ -1,7 +1,7 @@
 # 앱 시작 틀 (app_starter)
 
 나와 친구 몇 명이 쓰는 **작은 웹 앱**을 Claude Code로 만들고, 무료로 인터넷에 올리기 위한 틀입니다.
-개발을 몰라도 아래 순서만 따라 하면 됩니다. 코드는 Claude가 쓰고, 사람은 버튼 몇 번과 비밀번호 두 개만 넣습니다.
+개발을 몰라도 아래 순서만 따라 하면 됩니다. 코드는 Claude가 쓰고, 사람은 로그인 버튼 몇 번과 편집 암호만 넣습니다.
 
 > 예: 가계부, 운동 기록, 모임 회비 장부, 투자 비중 계산기처럼 "나(와 몇 명)만 쓰는 도구"에 맞습니다.
 > 회원가입·결제가 필요한 큰 서비스에는 맞지 않습니다.
@@ -15,7 +15,7 @@ Claude Code나 Codex에 이 저장소 주소와 만들고 싶은 것을 그대�
 > https://github.com/jrchun/app_starter 로 운동 기록 앱을 만들어서 배포까지 해 줘. 날짜별로 종목·무게·횟수를 적고 폰에서 주로 쓸 거야.
 
 AI가 [`docs/AGENT_SETUP.md`](docs/AGENT_SETUP.md)를 읽고 저장소 만들기 → 개발 → 데이터베이스 → 배포 → 실제 사이트 확인까지 진행합니다.
-사람이 할 일은 **브라우저 로그인 버튼 누르기(GitHub·Cloudflare·Supabase), 편집 암호 정하기, AI가 묻는 것에 답하기**뿐입니다.
+사람이 할 일은 **브라우저 로그인 버튼 누르기(GitHub·Cloudflare·Supabase), 자동 배포 연결 버튼 한 번, 편집 암호 정하기, AI가 묻는 것에 답하기**뿐입니다. 토큰을 만들 필요는 없습니다.
 
 - 내 컴퓨터에서 Claude Code·Codex를 쓰면 거의 전부 자동입니다.
 - claude.ai 웹 같은 클라우드에서 쓰면 저장소 만들기 등 몇 단계는 버튼을 직접 눌러야 합니다(아래 "새 앱 만들기").
@@ -65,25 +65,25 @@ AI가 [`docs/AGENT_SETUP.md`](docs/AGENT_SETUP.md)를 읽고 저장소 만들기
 
 3. Claude가 만들고, 테스트하고, 화면 캡처까지 확인한 뒤 보고합니다. 마음에 안 드는 곳은 그대로 말하면 고칩니다.
 
-### 3. 인터넷에 올리기 (처음 한 번, 15분 정도)
+### 3. 인터넷에 올리기 (처음 한 번, 10분 정도)
 
-Claude가 단계마다 안내합니다. 사람이 할 일은 아래 다섯 가지입니다. 자세한 순서와 흔한 실수는 [`docs/SETUP.md`](docs/SETUP.md)에 있습니다.
+**토큰이나 열쇠 같은 값을 만들 필요가 없습니다.** 각 서비스에 브라우저로 로그인만 하면 Claude가 나머지를 합니다.
+사람이 할 일은 아래 네 가지입니다. 자세한 순서와 흔한 실수는 [`docs/SETUP.md`](docs/SETUP.md)에 있습니다.
 
 | # | 할 일 | 어디서 |
 |---|---|---|
-| ① | **Cloudflare API 토큰** 만들기 (권한: D1 Edit). Claude가 띄우는 입력 카드에 붙여 넣기 | Cloudflare › Account API tokens |
-| ② | Claude에게 "배포 준비해 줘" → Claude가 데이터베이스를 만들고 설정 파일을 채움 | Claude Code |
-| ③ | Cloudflare에서 **Workers** 만들기 › Git 연결 › 내 저장소, 이름은 ②에서 정한 앱 이름과 똑같이 | Cloudflare › Workers 및 Pages |
+| ① | Claude가 Cloudflare 연결을 부탁하면 **로그인 버튼** 누르기 (claude.ai는 설정 › 커넥터 › 사용자 지정 커넥터 › `https://mcp.cloudflare.com/mcp`) | 브라우저 |
+| ② | Claude가 데이터베이스를 만들고 사이트를 처음 올림 → 주소를 받아 폰으로 열어 보기 | Claude Code |
+| ③ | **자동 배포 연결**: Cloudflare › Workers 및 Pages › 내 앱 › 설정 › Builds › **Connect** › GitHub › 1에서 만든 저장소. 처음이면 GitHub에서 Cloudflare 앱 설치를 허락 | Cloudflare |
 | ④ | Worker › 설정 › 변수 및 비밀 › **Secret** `WRITE_TOKEN` = 내가 정한 **편집 암호** | Cloudflare |
-| ⑤ | (매일 자동 작업이 있는 앱만) GitHub › Settings › Secrets and variables › Actions › **Secrets 탭** › `CLOUDFLARE_API_TOKEN` = ①의 토큰 | GitHub |
 
 끝나면 Claude가 사이트(`https://앱이름.내계정.workers.dev`)를 직접 검사하고 결과를 알려 줍니다.
 마지막으로 폰에서 사이트를 열어 아무 값이나 고치고, 편집 암호를 한 번 넣어 **"저장됨"**이 뜨면 완성입니다.
 
 > **꼭 기억할 것**
-> - **Pages가 아니라 Workers**로 만드세요. Pages로 만들면 배포가 실패합니다.
-> - **토큰은 만들 때 한 번만 보입니다.** 바로 복사하세요. 놓쳤으면 토큰 목록의 `…` › Roll로 다시 받습니다.
-> - 토큰과 편집 암호는 **채팅에 붙여 넣지 마세요.** Claude가 띄우는 입력 카드나 각 서비스 설정 화면에만 넣습니다.
+> - **Pages가 아니라 Workers**입니다. Claude가 만든 Worker에 연결하세요.
+> - 편집 암호는 **채팅에 붙여 넣지 마세요.** Cloudflare 설정 화면에만 넣습니다.
+> - 매일 자동 작업은 Cloudflare 안에서 돕니다(따로 설정할 것 없음). 무료 플랜은 계정 전체에서 5개 앱까지 매일 작업을 쓸 수 있습니다.
 
 ### 4. 그다음부터
 
@@ -109,12 +109,13 @@ Claude가 단계마다 안내합니다. 사람이 할 일은 아래 다섯 가�
 | 화면 | 정적 HTML·CSS·JS (빌드 없음) | `web/` |
 | API | Cloudflare Worker | `src/` |
 | 저장 | Cloudflare D1 (SQLite) | `db/schema.sql` |
-| 매일 작업 | GitHub Actions + Python | `jobs/`, `.github/workflows/daily.yml` |
+| 매일 작업 | Cloudflare Cron Trigger | `src/jobs.js`, `wrangler.toml` `[triggers]` |
+| 배포 | Cloudflare MCP(첫 배포), Workers Builds(이후 `main` 푸시마다) | `scripts/cf_mcp.mjs` |
 
 - 문서 하나를 저장하는 API(`/api/doc`): 버전 관리, 다른 기기 동시 수정 시 409, 편집 암호 없으면 401
 - 화면 동기화 모듈(`web/js/docsync.js`): 0.7초 뒤 자동 저장, 충돌 시 최신으로 교체, 화면 안 편집 암호 입력칸
 - 라이트·다크 색 변수, 폰(400px) 기준 레이아웃
-- `scripts/setup_cloudflare.py`(D1 생성·스키마·ID 채우기), `scripts/check_site.mjs`(배포 검사), 테스트
+- `scripts/cf_mcp.mjs`(Cloudflare MCP로 D1 준비·배포·상태 확인), `scripts/check_site.mjs`(배포 검사), 테스트
 - 작업 규칙은 [`CLAUDE.md`](CLAUDE.md), 배포 절차와 함정은 [`docs/SETUP.md`](docs/SETUP.md)
 - 포함된 외부 코드(Supabase 브라우저 라이브러리, MIT)의 출처: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)
 
