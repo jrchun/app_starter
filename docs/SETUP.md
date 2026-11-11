@@ -1,5 +1,7 @@
 # 새 프로젝트 배포 절차
 
+쉬운 설명은 [README](../README.md)의 "새 앱 만들기"를 먼저 본다. 이 문서는 Claude가 따라 하는 자세한 순서다.
+
 이 틀로 만든 앱은 아래 구성으로 돈다. 처음 한 번만 설정하면 이후에는 `main`에 올릴 때마다 자동 배포된다.
 
 ```
@@ -12,7 +14,7 @@ GitHub Actions (매일) ── jobs/daily.py ──▶ D1 REST API
 
 | # | 할 일 | 어디서 | 누가 |
 |---|---|---|---|
-| 1 | GitHub에서 이 틀로 새 저장소 만들기(**Use this template**). 기본 브랜치는 `main` | GitHub | 사람 |
+| 1 | GitHub에서 `app_starter` 페이지 › 초록색 **Use this template** › Create a new repository. 기본 브랜치는 `main` | GitHub | 사람 |
 | 2 | Cloudflare API 토큰 만들기: Account API tokens › 만들기 › 권한 **D1 › Edit**, 범위 Entire Account. (배포 상태를 Claude가 보게 하려면 **Workers Scripts › Read**도) | Cloudflare | 사람 |
 | 3 | `python3 scripts/setup_cloudflare.py --name <프로젝트이름>` → D1 생성, 스키마 적용, ID 채우기. 커밋·푸시 | 터미널 | Claude |
 | 4 | Workers 및 Pages › 만들기 › **Workers** › Git 연결 › 이 저장소, 브랜치 `main`, 빌드 명령 없음, 배포 명령 `npx wrangler deploy`. **Worker 이름 = 3의 이름** | Cloudflare | 사람 |
