@@ -63,7 +63,7 @@
    - **Supabase 모드**: 사람마다 로그인하고 **자기 데이터만** 본다. 무료 플랜은 계정당 프로젝트 **2개**까지(일시 정지한 것은 세지 않음).
 4. **사이트 주소**: "이 주소로 됩니다"라고 보여 주고 확인받는다. 기획 요약을 보여 주기 **전에** `node scripts/cf_mcp.mjs address --name <앱이름>` → `execute`(읽기만 함)로 알아본다.
    - 주소는 `https://<앱이름>.<계정 이름>.workers.dev`다. 앱 이름은 기본으로 **저장소 이름**을 쓰고(영문 소문자·숫자·하이픈으로 맞춘다), Worker 이름·D1 이름이 된다. 기획자가 다른 앱 이름을 원하면 그 이름을 쓴다.
-   - `account_subdomain`이 있으면: 계정 이름은 이미 정해져 바꿀 수 없다. 예: "사이트 주소는 `https://gym-log.jrchun1.workers.dev`가 됩니다." `name_taken_in_account: true`면 같은 이름의 앱이 이미 있으니 다른 앱 이름을 제안한다.
+   - `account_subdomain`이 있으면: 계정 이름은 이미 정해져 있다(AI가 바꾸지 않는다. 바꾸려면 사람이 대시보드 › Workers 및 Pages › Your subdomain › Change, 모든 앱 주소가 바뀜). 예: "사이트 주소는 `https://gym-log.tedcheon.workers.dev`가 됩니다." `name_taken_in_account: true`면 같은 이름의 앱이 이미 있으니 다른 앱 이름을 제안한다.
    - `account_subdomain`이 없으면(처음 쓰는 계정): `proposals`의 후보(GitHub 아이디 기반)를 보여 주고 고르게 한다. "계정 이름은 한 번 정하면 바꿀 수 없고 앞으로 만드는 모든 앱 주소에 들어갑니다"를 꼭 덧붙인다. 기획자가 원하는 이름을 직접 말해도 된다.
 5. 매일 작업이 필요한지(필요 없으면 `crons = []`로 끈다. 무료 플랜은 계정 전체 5개)
 
