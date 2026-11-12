@@ -5,17 +5,18 @@
 // 예약 작업(매일 등)은 src/jobs.js. 시각은 wrangler.toml의 [triggers] crons.
 import * as doc from './api/doc.js';
 import * as health from './api/health.js';
+import * as password from './api/password.js';
 import { json } from './lib/http.js';
 import { runScheduled } from './jobs.js';
 
-const ROUTES = { '/api/doc': doc, '/api/health': health };
+const ROUTES = { '/api/doc': doc, '/api/health': health, '/api/password': password };
 
 export default {
   async fetch(request, env, ctx) {
     const path = new URL(request.url).pathname.replace(/\/+$/, '');
     const route = ROUTES[path];
-    // Supabase 모드(D1 없음)에서는 /api/doc을 쓰지 않는다.
-    if (!route || (route === doc && !env.DB)) return env.ASSETS.fetch(request);
+    // Supabase 모드(D1 없음)에서는 /api/doc·/api/password를 쓰지 않는다(로그인이 대신한다).
+    if (!route || ((route === doc || route === password) && !env.DB)) return env.ASSETS.fetch(request);
     const handler = route[request.method];
     if (!handler) return json({ detail: '허용하지 않는 요청 방식입니다.' }, 405);
     try {

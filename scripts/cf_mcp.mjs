@@ -6,6 +6,9 @@
 //   node scripts/cf_mcp.mjs fill --name <앱이름> [--database-id <ID>]   wrangler.toml에 이름과 D1 ID를 채운다(파일만 고침)
 //   node scripts/cf_mcp.mjs deploy                    Worker 올리기(web/ 포함), 예약 작업 시각, workers.dev 켜기
 //   node scripts/cf_mcp.mjs status                    배포 시각, 예약 작업, Git 자동 배포(Workers Builds) 최근 결과
+//   node scripts/cf_mcp.mjs connect --github-account-id <번호> --github-repo-id <번호> [--repo 소유자/이름]
+//                                                     Cloudflare가 저장소를 가져가 자동 배포하게 연결하고 첫 빌드 시작
+//                                                     (번호: gh api -X GET search/repositories -f q='repo:소유자/이름')
 //
 // 코드 파일은 기본으로 .wrangler/mcp/<명령>.js에 생긴다(--out으로 바꿀 수 있다. .wrangler/는 커밋하지 않는다).
 // 계정이 여러 개면 execute를 부를 때 account_id를 함께 넘긴다.
@@ -16,6 +19,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { execFileSync } from 'node:child_process';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const NAME_RE = /^[a-z0-9][a-z0-9-]{0,62}$/;
@@ -198,7 +202,7 @@ return out;
 
 export function renderStatus(config) {
   return `async () => {
-// cf_mcp.mjs status: 배포 시각, 예약 작업, 편집 암호 유무, Git 자동 배포(Workers Builds) 최근 결과
+// cf_mcp.mjs status: 배포 시각, 예약 작업, 대시보드 편집 암호 유무, Git 자동 배포(Workers Builds) 최근 결과
 const NAME = ${j(config.name)};
 const script = \`/accounts/\${accountId}/workers/scripts/\${NAME}\`;
 const out = { name: NAME };
@@ -208,7 +212,7 @@ if (!w) return { ...out, exists: false, note: "이 이름의 Worker가 없습니
 out.exists = true; out.modified_on = w.modified_on; out.has_assets = w.has_assets;
 out.crons = (await cloudflare.request({ method: "GET", path: \`\${script}/schedules\` })).result.schedules.map(s => s.cron);
 const settings = (await cloudflare.request({ method: "GET", path: \`\${script}/settings\` })).result;
-out.write_token_set = (settings.bindings || []).some(b => b.name === "WRITE_TOKEN");
+out.dashboard_secret_set = (settings.bindings || []).some(b => b.name === "WRITE_TOKEN"); // 사이트에서 정한 편집 암호는 D1에 있다(check_site로 확인)
 try {
   const r = (await cloudflare.request({ method: "GET", path: \`/accounts/\${accountId}/builds/builds/latest\`, query: { external_script_ids: w.tag } })).result;
   const b = r && (r.builds ? r.builds[w.tag] : r[w.tag]);
@@ -217,6 +221,49 @@ try {
   out.git_build = "확인 불가: 커넥터에 Workers CI 읽기 권한이 없음(재연결 때 workers-ci.read 허용 필요)";
 }
 return out;
+}`;
+}
+
+// connect: Workers Builds API로 "만들기 › GitHub"를 대신한다. 필요한 것: 커넥터의 Workers CI 쓰기 권한,
+// 이 GitHub 계정에 Cloudflare 앱 설치(계정당 처음 한 번은 사람이 대시보드에서), 기존 배포용 토큰(build token).
+// 하나라도 없으면 ok:false와 이유를 돌려준다. 그때는 사람이 대시보드에서 6-2를 한다.
+export function renderConnect({ name, owner, repo, ownerId, repoId, compatibilityDate }) {
+  return `async () => {
+// cf_mcp.mjs connect: Cloudflare가 GitHub 저장소를 가져가 자동 배포하게 연결하고 첫 빌드를 시작한다
+const NAME = ${j(name)}, OWNER = ${j(owner)}, REPO = ${j(repo)}, OWNER_ID = ${j(String(ownerId))}, REPO_ID = ${j(String(repoId))};
+const base = \`/accounts/\${accountId}\`;
+const out = { name: NAME, repo: OWNER + "/" + REPO };
+const fail = (step, note, e) => ({ ...out, ok: false, step, note, error: e ? String(e.message || e).slice(0, 400) : undefined });
+let tokens;
+try { tokens = (await cloudflare.request({ method: "GET", path: \`\${base}/builds/tokens\` })).result || []; }
+catch (e) { return fail("권한", "커넥터에 Workers CI 권한이 없습니다. 사람이 대시보드에서 6-2(만들기 › GitHub)를 하거나, 커넥터를 다시 연결하며 Workers CI 쓰기를 허용하세요.", e); }
+if (!tokens.length) return fail("배포용 토큰", "배포용 토큰(build token)이 없습니다. 이 계정의 첫 연결이라 사람이 대시보드에서 6-2를 해야 합니다.");
+const token = tokens[0].build_token_uuid;
+let w = (await cloudflare.request({ method: "GET", path: \`\${base}/workers/scripts\` })).result.find(s => s.id === NAME);
+if (!w) {
+  // 연결하려면 Worker가 먼저 있어야 한다. 첫 빌드가 끝나면 진짜 앱으로 바뀌는 자리 표시용 Worker를 만든다.
+  const form = new FormData();
+  form.append("metadata", new Blob([JSON.stringify({ main_module: "index.js", compatibility_date: ${j(compatibilityDate)} })], { type: "application/json" }));
+  form.append("index.js", new Blob(["export default { fetch: () => new Response('배포 준비 중입니다. 1~2분 뒤 새로고침해 주세요.', { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8' } }) };"], { type: "application/javascript+module" }), "index.js");
+  await cloudflare.request({ method: "PUT", path: \`\${base}/workers/scripts/\${NAME}\`, body: form });
+  await cloudflare.request({ method: "POST", path: \`\${base}/workers/scripts/\${NAME}/subdomain\`, body: { enabled: true, previews_enabled: false } });
+  w = (await cloudflare.request({ method: "GET", path: \`\${base}/workers/scripts\` })).result.find(s => s.id === NAME);
+  out.placeholder_created = true;
+}
+try {
+  await cloudflare.request({ method: "POST", path: \`\${base}/builds/workers\`, body: {
+    script_tag: w.tag,
+    git_repository: { provider_type: "github", provider_account_id: OWNER_ID, provider_account_name: OWNER, repo_id: REPO_ID, repo_name: REPO, branch: "main" },
+    production_settings: { build_command: "", deploy_command: "npx wrangler deploy", build_token_uuid: token, root_directory: "/", path_includes: ["*"], path_excludes: [], build_caching_enabled: false },
+    previews_enabled: false,
+  } });
+} catch (e) { return fail("연결", "저장소 연결에 실패했습니다. GitHub에 Cloudflare 앱이 이 저장소를 볼 수 있게 설치돼 있는지 확인하세요(없으면 사람이 6-2).", e); }
+const triggers = (await cloudflare.request({ method: "GET", path: \`\${base}/builds/workers/\${w.tag}/triggers\` })).result || [];
+const prod = triggers.find(t => (t.branch_includes || []).includes("main")) || triggers[0];
+if (!prod) return fail("빌드", "연결은 됐지만 빌드 설정을 찾지 못했습니다. main에 아무 커밋이나 올리면 빌드가 시작됩니다.");
+const b = (await cloudflare.request({ method: "POST", path: \`\${base}/builds/triggers/\${prod.trigger_uuid || prod.uuid}/builds\`, body: { branch: "main" } })).result;
+const sub = (await cloudflare.request({ method: "GET", path: \`\${base}/workers/subdomain\` })).result.subdomain;
+return { ...out, ok: true, build_uuid: b && b.build_uuid, url: \`https://\${NAME}.\${sub}.workers.dev\`, next: "1~2분 뒤 status로 git_build가 success인지 보고 check_site로 검사" };
 }`;
 }
 
@@ -252,13 +299,26 @@ export function main(args = process.argv.slice(2)) {
     const file = path.join(ROOT, 'wrangler.toml');
     fs.writeFileSync(file, fillToml(fs.readFileSync(file, 'utf8'), { name, databaseId }));
     console.log(`wrangler.toml을 채웠습니다: name=${name}${databaseId ? `, database_id=${databaseId}` : ''}. 커밋·푸시하세요.`);
+  } else if (cmd === 'connect') {
+    if (!config.name || config.name === 'my-app') throw new Error('먼저 fill로 wrangler.toml의 name을 정하세요.');
+    const ownerId = arg(args, '--github-account-id'), repoId = arg(args, '--github-repo-id');
+    if (!/^\d+$/.test(ownerId || '') || !/^\d+$/.test(repoId || '')) {
+      throw new Error("--github-account-id와 --github-repo-id(숫자)가 필요합니다: gh api -X GET search/repositories -f q='repo:소유자/이름' --jq '.items[0] | {repo_id: .id, owner_id: .owner.id}'");
+    }
+    let full = arg(args, '--repo');
+    if (!full) {
+      try { full = execFileSync('git', ['-C', ROOT, 'remote', 'get-url', 'origin'], { encoding: 'utf8' }).trim().replace(/\.git$/, '').split(/[/:]/).slice(-2).join('/'); } catch { full = ''; }
+    }
+    const [owner, repo] = (full || '').split('/');
+    if (!owner || !repo) throw new Error('--repo 소유자/이름을 정해 주세요.');
+    writeOut(args, cmd, renderConnect({ name: config.name, owner, repo, ownerId, repoId, compatibilityDate: config.compatibilityDate }));
   } else if (cmd === 'deploy' || cmd === 'status') {
     if (!config.name || config.name === 'my-app') throw new Error('먼저 fill로 wrangler.toml의 name을 정하세요.');
     if (cmd === 'status') return writeOut(args, cmd, renderStatus(config));
     if (config.d1 && (!config.d1.id || config.d1.id === PLACEHOLDER_ID)) throw new Error('wrangler.toml의 database_id가 비어 있습니다. prepare → fill을 먼저 하세요.');
     writeOut(args, cmd, renderDeploy(config, collectBundle(ROOT, config)));
   } else {
-    console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').filter(l => l.startsWith('//')).slice(0, 12).join('\n'));
+    console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').filter(l => l.startsWith('//')).slice(0, 15).join('\n'));
     process.exitCode = 2;
   }
 }

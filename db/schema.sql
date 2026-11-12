@@ -8,6 +8,12 @@ CREATE TABLE IF NOT EXISTS doc (
   updated_at TEXT NOT NULL
 );
 
+-- 설정값. 사이트에서 처음 정한 편집 암호의 해시(key = 'write_hash', 값 = 소금:SHA-256)가 들어간다. 원문은 저장하지 않는다.
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
 -- 예약 작업 기록(src/jobs.js).
 CREATE TABLE IF NOT EXISTS job_log (
   ts TEXT NOT NULL,

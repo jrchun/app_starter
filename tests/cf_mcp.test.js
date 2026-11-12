@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
 import { execFileSync } from 'node:child_process';
-import { parseToml, readConfig, fillToml, collectBundle, renderPrepare, renderDeploy, renderStatus } from '../scripts/cf_mcp.mjs';
+import { parseToml, readConfig, fillToml, collectBundle, renderPrepare, renderDeploy, renderStatus, renderConnect } from '../scripts/cf_mcp.mjs';
 import { bundledAssets } from '../src/lib/bundled_assets.js';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -83,4 +83,25 @@ test('bundledAssets: /는 index.html, 없는 주소는 404, 형식 유지', asyn
   assert.equal((await get('/index')).status, 200);
   assert.equal((await get('/a/b.css')).headers.get('content-type'), 'text/css; charset=utf-8');
   assert.equal((await get('/nope')).status, 404);
+});
+
+test('connect: 저장소 연결 코드는 문법이 맞고 번호·이름·배포 명령을 담는다', () => {
+  const code = renderConnect({ name: 'gym-log', owner: 'me', repo: 'gym-log', ownerId: 123, repoId: 456, compatibilityDate: '2026-11-01' });
+  parses(code);
+  assert.match(code, /OWNER_ID = "123", REPO_ID = "456"/);
+  assert.match(code, /deploy_command: "npx wrangler deploy"/);
+  assert.match(code, /previews_enabled: false/);
+  assert.match(code, /branch: "main"/);
+});
+
+test('connect: GitHub 번호가 없으면 만들지 않고 방법을 알려 준다', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cfmcp-'));
+  fs.cpSync(ROOT, dir, { recursive: true, filter: s => !/node_modules|\.git$|\.wrangler/.test(s) });
+  fs.writeFileSync(path.join(dir, 'wrangler.toml'), fs.readFileSync(path.join(dir, 'wrangler.toml'), 'utf8').replace('name = "my-app"', 'name = "gym-log"'));
+  let err = '';
+  try { execFileSync(process.execPath, ['scripts/cf_mcp.mjs', 'connect'], { cwd: dir, encoding: 'utf8', stdio: 'pipe' }); } catch (e) { err = e.stderr; }
+  assert.match(err, /search\/repositories/);
+  const out = execFileSync(process.execPath, ['scripts/cf_mcp.mjs', 'connect', '--github-account-id', '1', '--github-repo-id', '2', '--repo', 'me/gym-log'], { cwd: dir, encoding: 'utf8' });
+  assert.match(out, /\.wrangler\/mcp\/connect\.js/);
+  parses(fs.readFileSync(path.join(dir, '.wrangler/mcp/connect.js'), 'utf8'));
 });

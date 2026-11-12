@@ -13,7 +13,13 @@ const sync = createDocSync({
     $('count').textContent = (doc.memo || '').length.toLocaleString('ko-KR') + '자';
   },
   status(text) { $('saveState').textContent = text; },
-  needToken() { $('tokenForm').hidden = false; $('tokenIn').focus(); },
+  needToken({ firstTime } = {}) {
+    // 처음이면 "정하기", 아니면 "입력". 정한 암호는 이 기기에 기억된다.
+    $('tokenLabel').textContent = firstTime ? '편집 암호 정하기' : '편집 암호';
+    $('tokenIn').autocomplete = firstTime ? 'new-password' : 'current-password';
+    $('tokenIn').minLength = firstTime ? 6 : 0;
+    $('tokenForm').hidden = false; $('tokenIn').focus();
+  },
 });
 
 for (const k of ['title', 'memo']) {
