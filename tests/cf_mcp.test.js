@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
 import { execFileSync } from 'node:child_process';
-import { parseToml, readConfig, fillToml, collectBundle, renderPrepare, renderDeploy, renderStatus, renderConnect, subdomainCandidates } from '../scripts/cf_mcp.mjs';
+import { parseToml, readConfig, fillToml, collectBundle, renderPrepare, renderDeploy, renderStatus, renderConnect, renderAddress, subdomainCandidates } from '../scripts/cf_mcp.mjs';
 import { bundledAssets } from '../src/lib/bundled_assets.js';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -106,15 +106,25 @@ test('connect: GitHub 번호가 없으면 만들지 않고 방법을 알려 준�
   parses(fs.readFileSync(path.join(dir, '.wrangler/mcp/connect.js'), 'utf8'));
 });
 
-test('하위 도메인 후보: 소문자·하이픈으로 맞추고 여러 개를 준비한다', () => {
-  assert.deepEqual(subdomainCandidates('JRchun_X', () => '123'), ['jrchun-x', 'jrchun-x-apps', 'jrchun-x-app', 'jrchun-x-123']);
-  assert.equal(subdomainCandidates('', () => '1')[0], 'apps');
+test('계정 이름 후보: 소문자·하이픈으로 맞춘 고정 후보', () => {
+  assert.deepEqual(subdomainCandidates('JRchun_X'), ['jrchun-x', 'jrchun-x-apps', 'jrchun-x-app']);
+  assert.equal(subdomainCandidates('')[0], 'apps');
 });
 
-test('prepare: 하위 도메인은 없을 때만 만든다(있으면 PUT하지 않음)', () => {
-  const code = renderPrepare({ name: 'gym-log', schema: 'SELECT 1;', wantD1: false, subdomains: ['me', 'me-apps'] });
+test('address: 읽기만 한다(만들거나 바꾸는 요청이 없다)', () => {
+  const code = renderAddress({ name: 'gym-log', proposals: ['me', 'me-apps'] });
   parses(code);
-  assert.match(code, /const SUBDOMAIN_CANDIDATES = \["me","me-apps"\]/);
-  const putAt = code.indexOf('method: "PUT"'), guardAt = code.indexOf('if (!sub) {');
-  assert.ok(guardAt > 0 && putAt > guardAt, 'PUT은 if (!sub) 안에 있어야 한다');
+  assert.doesNotMatch(code, /method: "(PUT|POST|DELETE|PATCH)"/);
+  assert.match(code, /https:\/\/\$\{NAME\}\.\$\{p\}\.workers\.dev/);
+});
+
+test('prepare: 계정 이름은 확인받은 이름이 있고, 아직 없을 때만 만든다', () => {
+  const none = renderPrepare({ name: 'gym-log', schema: 'SELECT 1;', wantD1: false });
+  parses(none);
+  assert.match(none, /const CONFIRMED_SUBDOMAIN = null/);
+  const yes = renderPrepare({ name: 'gym-log', schema: 'SELECT 1;', wantD1: false, confirmedSubdomain: 'me-apps' });
+  parses(yes);
+  assert.match(yes, /const CONFIRMED_SUBDOMAIN = "me-apps"/);
+  const guardAt = yes.indexOf('if (!sub && CONFIRMED_SUBDOMAIN) {'), putAt = yes.indexOf('method: "PUT"');
+  assert.ok(guardAt > 0 && putAt > guardAt, 'PUT은 "없고 확인받았을 때" 조건 안에만 있어야 한다');
 });
