@@ -18,7 +18,8 @@
 |---|---|---|---|
 | 1 | GitHub에서 `app_starter` 페이지 › 초록색 **Use this template** › Create a new repository. 기본 브랜치는 `main` | GitHub | 사람 |
 | 2 | Claude Code·Codex에 Cloudflare MCP 연결(브라우저 로그인). claude.ai는 설정 › 커넥터 › 사용자 지정 커넥터 › `https://mcp.cloudflare.com/mcp` | 클라이언트 | 사람(로그인 버튼) |
-| 3 | `cf_mcp.mjs prepare` → MCP 실행 → `fill` → 커밋·`main`에 반영 → `cf_mcp.mjs deploy` → MCP 실행 | Claude | Claude |
+| 3 | `cf_mcp.mjs prepare` → MCP 실행 → `fill` → 커밋 → `cf_mcp.mjs deploy` → MCP 실행 → 사이트 검사(클라우드 세션은 사이트 주소 허용 승인 창) | Claude | Claude(승인은 사람) |
+| 3-1 | Claude가 만든 PR을 Merge해서 `main`에 반영(내 컴퓨터면 Claude가 `main`에 바로 올림). **4번보다 먼저** | GitHub | 사람 |
 | 4 | Workers 및 Pages › `<앱이름>` › 설정 › **Builds › Connect** › GitHub › 1의 저장소, 브랜치 `main`, 빌드 명령 비움, 배포 명령 `npx wrangler deploy`. 처음이면 GitHub에서 Cloudflare 앱 설치를 허락 | Cloudflare | 사람(앱마다 한 번) |
 | 5 | Worker › 설정 › 변수 및 비밀 › 추가 › 형식 **Secret**, 이름 `WRITE_TOKEN`, 값 = 편집 암호 (D1 모드) | Cloudflare | 사람 |
 | 6 | `node scripts/check_site.mjs https://<이름>.<계정>.workers.dev` 전부 ok, `cf_mcp.mjs status`로 예약 작업·자동 배포 확인 | 터미널·MCP | Claude |

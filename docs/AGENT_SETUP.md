@@ -4,6 +4,29 @@
 사용자는 개발 지식이 많지 않다. **한국어로, 쉬운 말로** 진행 상황을 알린다.
 아래 "사람에게 물을 것"이 아닌 일은 묻지 말고 진행한다. 끝나면 실제 사이트를 직접 확인한 결과로 보고한다.
 
+## 한눈에 보는 순서 (D1 모드, claude.ai 클라우드 세션 기준)
+
+사람이 할 일은 ★. 시작할 때 이 표를 사용자에게 보여 주고, 지금 몇 번인지 알리며 진행한다.
+
+| # | 누가 | 무엇을 | 이 문서 |
+|---|---|---|---|
+| 1 | ★사람 | GitHub `jrchun/app_starter` › Use this template › 내 저장소 만들기, 그 저장소로 세션 열기 | 3 |
+| 2 | ★사람 | (처음 한 번) claude.ai 설정 › 커넥터에 Cloudflare MCP 연결 | 1 |
+| 3 | AI→★사람 | 앱 내용·DB 모드·앱 이름 묻고 답 받기 | 2 |
+| 4 | AI | 앱 만들기, `npm test`, 로컬 화면 확인 | 4 |
+| 5 | AI | MCP로 D1 만들기(`prepare`) → `fill` → 커밋 | 5 |
+| 6 | AI | MCP로 첫 배포(`deploy`) → 사이트 주소 생김. Cloudflare에 Worker를 **AI가** 만든다 | 6-1 |
+| 7 | AI→★사람 | 사이트 검사를 위해 사이트 주소 허용 승인 창(클라우드 세션만) → 검사·화면 확인 | 8, 7 |
+| 8 | AI→★사람 | PR 만들기 → 사람이 **Merge**해서 `main`에 반영 | 6-1 |
+| 9 | ★사람 | Cloudflare › Worker › 설정 › Builds › **Connect** › 내 저장소(처음이면 GitHub에서 Cloudflare 앱 허락) | 6-2 |
+| 10 | ★사람 | Worker › 설정 › 변수 및 비밀 › Secret `WRITE_TOKEN` = 편집 암호 | 6-3 |
+| 11 | AI→★사람 | `status`로 자동 배포 확인, 사이트 재검사 → 폰에서 "저장됨" 확인 | 7 |
+
+- 이후 고칠 때: AI가 고치고 PR → 사람이 Merge → Cloudflare가 자동 배포 → AI가 검사.
+- 순서가 중요한 이유: 9번 Connect는 "이미 있는 Worker에 저장소를 잇는" 버튼이라 6번이 먼저다. 연결 즉시 `main`을 가져가 배포하므로 `main`에 앱 코드와 채운 `wrangler.toml`이 있어야 한다(8번이 먼저).
+- Supabase 모드: 6번(MCP 첫 배포)이 너무 커서 건너뛰고, 8번 Merge 뒤 9번을 "만들기 › GitHub › 저장소 선택"(새 Worker)으로 한다.
+- 내 컴퓨터: 1번은 `gh repo create`, 7번 승인 창 없음, 8번은 AI가 `main`에 바로 올린다.
+
 ## 0. 원칙
 
 - **API 토큰 없이 진행한다.** Cloudflare·Supabase·GitHub는 각 서비스의 브라우저 로그인(MCP·OAuth)으로 연결한다. 사용자에게 토큰을 만들게 하지 않는다.
@@ -79,13 +102,17 @@
 **Pages가 아니라 Workers다.** `wrangler.toml`이 Workers 형식(main + [assets] + [triggers])이다.
 
 ### 6-1. 첫 배포: Cloudflare MCP (사람이 기다리지 않게 바로 띄운다)
-1. 변경을 커밋하고 `main`에 올린다(클라우드 세션이면 작업 브랜치를 올리고, 사람에게 `main`에 합쳐 달라고 하거나 PR을 만든다).
-2. `node scripts/cf_mcp.mjs deploy` → `.wrangler/mcp/deploy.js` 내용을 `execute`의 `code`로 넘긴다. Worker 올리기, 예약 작업 시각 등록, `workers.dev` 켜기를 하고 `url`을 돌려준다.
+1. `node scripts/cf_mcp.mjs deploy` → `.wrangler/mcp/deploy.js` 내용을 그대로(다시 타이핑하지 말고 파일을 읽어서) `execute`의 `code`로 넘긴다. Worker 올리기, 예약 작업 시각 등록, `workers.dev` 켜기를 하고 `url`을 돌려준다.
+2. 7번대로 사이트를 검사하고 폰 폭 화면을 본다.
+3. `main`에 반영한다.
+   - 클라우드 세션: 작업 브랜치에 올리고 **PR을 만든다.** 사용자가 배포를 요청했으면 PR 생성까지 요청한 것으로 본다. PR 링크를 주고 "Merge 버튼을 눌러 주세요"라고 부탁한다. Merge 전에는 6-2로 넘어가지 않는다.
+   - 내 컴퓨터: `main`에 바로 올린다.
    - MCP로는 정적 자산 업로드를 할 수 없어서(아래 시험 기록) `web/`을 Worker 안에 묶어 올린다. 화면과 동작은 같다. Git 자동 배포가 한 번 돌면 원래 구성(정적 자산)으로 바뀐다.
    - 스크립트가 "너무 큽니다"라고 하면(100KB 넘음. Supabase 모드는 라이브러리 때문에 항상 넘는다) MCP 배포를 건너뛴다. 대신 6-2를 "새 Worker"로 한다: 대시보드 › Workers 및 Pages › **만들기(Create application)** › GitHub › 저장소 선택 › 이름 = `wrangler.toml`의 `name` › 배포. 그 뒤 `cf_mcp.mjs status`로 Worker와 예약 작업이 생겼는지 본다.
 
 ### 6-2. 자동 배포 연결: 사람이 앱마다 한 번 (필수)
 `main`에 올릴 때마다 Cloudflare가 저장소를 가져가 `npx wrangler deploy`로 배포하게 한다(Workers Builds). 토큰은 Cloudflare가 스스로 만든다.
+- 먼저 확인: `main`에 앱 코드와 채운 `wrangler.toml`이 들어갔는가(6-1의 3). 아니면 연결 즉시 빈 틀이 배포되거나 이름이 안 맞아 실패한다.
 - 사람에게 부탁(6-1로 Worker가 이미 있을 때): 대시보드 › Workers 및 Pages › `<앱이름>` › 설정(Settings) › **빌드(Builds)** › **연결(Connect)** › GitHub › 3에서 만든 저장소, 브랜치 `main`, 빌드 명령 비움, 배포 명령 `npx wrangler deploy`.
   - 처음이면 GitHub 화면이 뜨고 Cloudflare 앱 설치를 묻는다. 그 저장소(또는 모든 저장소)를 허용한다. 계정당 처음 한 번만 묻는다.
   - 화면 이름은 바뀔 수 있다. 다르면 Cloudflare MCP `docs`로 "Workers Builds connect repository"를 찾아 현재 순서를 안내한다.
@@ -113,6 +140,7 @@
 ## 8. 클라우드 세션(claude.ai/code)에서 할 때
 
 클라우드 세션의 컨테이너는 정해진 주소에만 나갈 수 있다. 처음 배포하는 앱이면 이렇게 한다.
+- 새 세션은 보통 기본(Default) 환경에서 시작한다. 사이트 주소는 6-1의 `deploy` 결과(`url`)로 알 수 있으니, 그때 바로 아래처럼 허용을 요청한다.
 - **사이트 검사가 막히면**(`check_site.mjs`가 `fetch failed`, 프록시 403): 환경 도구(`get_environment` → 기본 환경이면 `create_environment`)로 **이 저장소 전용 개인 환경**을 만들고 허용 호스트에 `<앱이름>.<하위도메인>.workers.dev`만 넣는다. 사람이 승인 창에서 허락하면 이 세션에 바로 적용된다. 다른 저장소와 함께 쓰는 기본 환경은 건드리지 않는다.
 - **Cloudflare API(api.cloudflare.com), `wrangler`는 컨테이너에서 쓰지 않는다.** 모든 Cloudflare 작업은 MCP `execute`로 한다. MCP 실행 환경도 Cloudflare API 밖(사이트 주소 포함)으로는 나갈 수 없으므로, 사이트 검사는 컨테이너에서 한다.
 - **Supabase**: 저장소 `.mcp.json`의 연결은 실패할 수 있다. claude.ai의 Supabase 커넥터(도구 이름 `mcp__Supabase__...`)를 쓴다. 둘 다 없으면 사람에게 claude.ai 설정 › 커넥터에서 Supabase를 연결해 달라고 한다.

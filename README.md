@@ -15,10 +15,10 @@ Claude Code나 Codex에 이 저장소 주소와 만들고 싶은 것을 그대�
 > https://github.com/jrchun/app_starter 로 운동 기록 앱을 만들어서 배포까지 해 줘. 날짜별로 종목·무게·횟수를 적고 폰에서 주로 쓸 거야.
 
 AI가 [`docs/AGENT_SETUP.md`](docs/AGENT_SETUP.md)를 읽고 저장소 만들기 → 개발 → 데이터베이스 → 배포 → 실제 사이트 확인까지 진행합니다.
-사람이 할 일은 **브라우저 로그인 버튼 누르기(GitHub·Cloudflare·Supabase), 자동 배포 연결 버튼 한 번, 편집 암호 정하기, AI가 묻는 것에 답하기**뿐입니다. 토큰을 만들 필요는 없습니다.
+사람이 할 일은 **브라우저 로그인 버튼 누르기(GitHub·Cloudflare·Supabase), Claude가 만든 변경 합치기(Merge), 자동 배포 연결 버튼 한 번, 편집 암호 정하기, AI가 묻는 것에 답하기**뿐입니다. 토큰을 만들 필요는 없습니다.
 
 - 내 컴퓨터에서 Claude Code·Codex를 쓰면 거의 전부 자동입니다.
-- claude.ai 웹 같은 클라우드에서 쓰면 저장소 만들기 등 몇 단계는 버튼을 직접 눌러야 합니다(아래 "새 앱 만들기").
+- claude.ai 웹 같은 클라우드에서 쓰면 저장소 만들기, 변경 합치기(Merge), 자동 배포 연결은 버튼을 직접 눌러야 합니다(아래 "새 앱 만들기").
 
 ### 데이터 저장 방식 고르기
 
@@ -68,14 +68,15 @@ AI가 [`docs/AGENT_SETUP.md`](docs/AGENT_SETUP.md)를 읽고 저장소 만들기
 ### 3. 인터넷에 올리기 (처음 한 번, 10분 정도)
 
 **토큰이나 열쇠 같은 값을 만들 필요가 없습니다.** 각 서비스에 브라우저로 로그인만 하면 Claude가 나머지를 합니다.
-사람이 할 일은 아래 네 가지입니다. 자세한 순서와 흔한 실수는 [`docs/SETUP.md`](docs/SETUP.md)에 있습니다.
+사람이 할 일은 아래 다섯 가지이고, **이 순서대로** 합니다. ④는 ②와 ③이 끝난 뒤에 해야 합니다. 자세한 순서와 흔한 실수는 [`docs/SETUP.md`](docs/SETUP.md)에 있습니다.
 
 | # | 할 일 | 어디서 |
 |---|---|---|
-| ① | Claude가 Cloudflare 연결을 부탁하면 **로그인 버튼** 누르기 (claude.ai는 설정 › 커넥터 › 사용자 지정 커넥터 › `https://mcp.cloudflare.com/mcp`) | 브라우저 |
-| ② | Claude가 데이터베이스를 만들고 사이트를 처음 올림 → 주소를 받아 폰으로 열어 보기 | Claude Code |
-| ③ | **자동 배포 연결**: Cloudflare › Workers 및 Pages › 내 앱 › 설정 › Builds › **Connect** › GitHub › 1에서 만든 저장소. 처음이면 GitHub에서 Cloudflare 앱 설치를 허락 | Cloudflare |
-| ④ | Worker › 설정 › 변수 및 비밀 › **Secret** `WRITE_TOKEN` = 내가 정한 **편집 암호** | Cloudflare |
+| ① | (처음 한 번) Cloudflare **로그인 버튼** 누르기. claude.ai는 설정 › 커넥터 › 사용자 지정 커넥터 › `https://mcp.cloudflare.com/mcp` | 브라우저 |
+| ② | Claude가 데이터베이스와 사이트를 만들고 주소를 알려 줌. claude.ai에서는 "사이트 주소에 접속하게 해 달라"는 **승인 창**이 한 번 뜨니 허락 | Claude Code |
+| ③ | Claude가 준 PR 링크에서 **Merge** 버튼 (변경을 `main`에 합치기) | GitHub |
+| ④ | **자동 배포 연결**: Cloudflare › Workers 및 Pages › 내 앱(②에서 Claude가 만든 것) › 설정 › Builds › **Connect** › GitHub › 1에서 만든 저장소. 처음이면 GitHub에서 Cloudflare 앱 설치를 허락 | Cloudflare |
+| ⑤ | Worker › 설정 › 변수 및 비밀 › **Secret** `WRITE_TOKEN` = 내가 정한 **편집 암호** | Cloudflare |
 
 끝나면 Claude가 사이트(`https://앱이름.내계정.workers.dev`)를 직접 검사하고 결과를 알려 줍니다.
 마지막으로 폰에서 사이트를 열어 아무 값이나 고치고, 편집 암호를 한 번 넣어 **"저장됨"**이 뜨면 완성입니다.
@@ -87,7 +88,7 @@ AI가 [`docs/AGENT_SETUP.md`](docs/AGENT_SETUP.md)를 읽고 저장소 만들기
 
 ### 4. 그다음부터
 
-- 고치고 싶으면 Claude에게 말하면 됩니다. 저장소에 반영되면 사이트가 자동으로 바뀌고, Claude가 실제 사이트를 확인합니다.
+- 고치고 싶으면 Claude에게 말하면 됩니다. Claude가 준 PR을 Merge하면 사이트가 자동으로 바뀌고, Claude가 실제 사이트를 확인합니다.
 - 사이트 주소를 친구에게 보내면 **누구나 볼 수 있고**, **편집 암호를 아는 사람만 고칠 수 있습니다.**
 - 편집 암호는 기기마다 처음 한 번만 넣으면 그 기기에 기억됩니다.
 
