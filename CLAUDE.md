@@ -28,11 +28,11 @@ Cloudflare·Supabase 연결은 MCP(브라우저 로그인)로 한다. **API 토�
 
 ## 작업 흐름
 1. 고친 뒤 `npm test`(node + python 테스트)와 로컬 실행(`npx wrangler@4 dev`, 편집 암호는 `.dev.vars`)으로 확인한다.
-2. `main`에 올리면 Cloudflare(Workers Builds)가 자동 배포한다. Git 연결 전 첫 배포만 `cf_mcp.mjs deploy`를 MCP로 실행한다. 배포 뒤 **반드시** `node scripts/check_site.mjs <사이트 주소>`로 실제 사이트를 확인하고, 화면은 브라우저로 폰 폭에서 본다. "배포했습니다"로 끝내지 않는다.
+2. `main`에 올리면 Cloudflare(Workers Builds)가 자동 배포한다. 첫 배포는 사람이 Cloudflare에서 "만들기 › GitHub"로 저장소를 한 번 가져오는 것이다(`cf_mcp.mjs deploy`는 작은 앱의 예비 수단). 배포 뒤 **반드시** `node scripts/check_site.mjs <사이트 주소>`로 실제 사이트를 확인하고, 화면은 브라우저로 폰 폭에서 본다. "배포했습니다"로 끝내지 않는다.
 3. 사람에게 맡겨야 하는 일(Git 연결, 편집 암호, Supabase 설정 클릭)은 `docs/AGENT_SETUP.md`·`docs/SETUP.md`의 해당 줄과 함정을 그대로 안내한다.
 
 ## 실행
 - 로컬: `cp .dev.vars.example .dev.vars && npx wrangler@4 d1 execute <이름> --local --file db/schema.sql && npx wrangler@4 dev` (예약 작업 시험: `--test-scheduled` 후 `/__scheduled`)
 - 테스트: `npm test`
 - 배포 확인: `npm run check -- https://<이름>.<계정>.workers.dev`
-- Cloudflare 준비·배포: `node scripts/cf_mcp.mjs prepare --name <이름>` → 생긴 `.wrangler/mcp/prepare.js`를 MCP `execute`로 → `fill` → `deploy`
+- Cloudflare 준비: `node scripts/cf_mcp.mjs prepare --name <저장소 이름>` → 생긴 `.wrangler/mcp/prepare.js`를 MCP `execute`로 → `fill` → PR Merge → 사람이 Cloudflare에서 GitHub 가져오기

@@ -16,20 +16,23 @@
 
 | # | 할 일 | 어디서 | 누가 |
 |---|---|---|---|
-| 1 | GitHub에서 `app_starter` 페이지 › 초록색 **Use this template** › Create a new repository. 기본 브랜치는 `main` | GitHub | 사람 |
-| 2 | Claude Code·Codex에 Cloudflare MCP 연결(브라우저 로그인). claude.ai는 설정 › 커넥터 › 사용자 지정 커넥터 › `https://mcp.cloudflare.com/mcp` | 클라이언트 | 사람(로그인 버튼) |
-| 3 | `cf_mcp.mjs prepare` → MCP 실행 → `fill` → 커밋 → `cf_mcp.mjs deploy` → MCP 실행 → 사이트 검사(클라우드 세션은 사이트 주소 허용 승인 창) | Claude | Claude(승인은 사람) |
-| 3-1 | Claude가 만든 PR을 Merge해서 `main`에 반영(내 컴퓨터면 Claude가 `main`에 바로 올림). **4번보다 먼저** | GitHub | 사람 |
-| 4 | Workers 및 Pages › `<앱이름>` › 설정 › **Builds › Connect** › GitHub › 1의 저장소, 브랜치 `main`, 빌드 명령 비움, 배포 명령 `npx wrangler deploy`. 처음이면 GitHub에서 Cloudflare 앱 설치를 허락 | Cloudflare | 사람(앱마다 한 번) |
-| 5 | Worker › 설정 › 변수 및 비밀 › 추가 › 형식 **Secret**, 이름 `WRITE_TOKEN`, 값 = 편집 암호 (D1 모드) | Cloudflare | 사람 |
-| 6 | `node scripts/check_site.mjs https://<이름>.<계정>.workers.dev` 전부 ok, `cf_mcp.mjs status`로 예약 작업·자동 배포 확인 | 터미널·MCP | Claude |
-| 7 | 폰에서 열어 아무 값이나 고치고, 편집 암호 넣고 "저장됨" 확인 | 폰 | 사람 |
+| 1 | `https://github.com/new?template_name=app_starter&template_owner=jrchun` › Repository name = 앱 이름 › Create. 기본 브랜치는 `main` | GitHub | 사람 |
+| 2 | Claude Code·Codex에 Cloudflare MCP 연결(브라우저 로그인). claude.ai는 설정 › 커넥터 › 사용자 지정 커넥터 › `https://mcp.cloudflare.com/mcp` | 클라이언트 | 사람(처음 한 번) |
+| 3 | `cf_mcp.mjs prepare` → MCP 실행(D1·사이트 주소) → 클라우드 세션은 사이트 주소 허용 승인 창 → 앱 만들기 → `fill` → 커밋 | Claude | Claude(승인은 사람) |
+| 4 | Claude가 만든 PR을 Merge해서 `main`에 반영(내 컴퓨터면 Claude가 `main`에 바로 올림). **5번보다 먼저** | GitHub | 사람 |
+| 5 | Workers 및 Pages › **만들기** › **GitHub** › 1의 저장소 › 이름 = `wrangler.toml`의 `name`, 빌드 명령 비움, 배포 명령 `npx wrangler deploy` › 배포. 처음이면 GitHub에서 Cloudflare 앱 설치를 허락 | Cloudflare | 사람(앱마다 한 번) |
+| 6 | Worker › 설정 › 변수 및 비밀 › 추가 › 형식 **Secret**, 이름 `WRITE_TOKEN`, 값 = 편집 암호 (D1 모드) | Cloudflare | 사람 |
+| 7 | `node scripts/check_site.mjs https://<이름>.<계정>.workers.dev` 전부 ok, `cf_mcp.mjs status`로 예약 작업 확인 | 터미널·MCP | Claude |
+| 8 | 폰에서 열어 아무 값이나 고치고, 편집 암호 넣고 "저장됨" 확인 | 폰 | 사람 |
+
+(예비) 5번 전에 화면을 먼저 보고 싶으면 Claude가 `cf_mcp.mjs deploy`로 MCP 첫 배포를 할 수 있다(작은 앱만). 그 경우 5번은 Worker › 설정 › **Builds › Connect**로 한다.
 
 ## 함정 (실제로 겪은 것)
 
 - **Pages가 아니라 Workers로 만든다.** 대시보드 기본 흐름이 Workers다. 이 틀의 `wrangler.toml`은 Workers 형식이라 Pages로 만들면 배포가 실패한다.
 - **Git 연결은 Worker 이름 = `wrangler.toml`의 `name`이어야 한다.** 다르면 빌드가 실패한다.
 - **자동 배포는 `main` 기준.** 클라우드 세션의 작업 브랜치에 올린 것은 배포되지 않는다. `main`에 합쳐야 한다.
+- **MCP 첫 배포는 실제 앱에서는 보통 못 쓴다.** 코드가 100KB를 넘으면(큰 데이터 파일, Supabase 라이브러리) MCP로 넘길 수 없다. 기본 경로는 Merge → Cloudflare에서 GitHub 가져오기다.
 - **Git 연결 뒤에는 MCP `deploy`를 쓰지 않는다.** 다음 `main` 푸시 때 Git 배포가 다시 덮어쓰지만, 그 사이 저장소와 사이트가 달라진다.
 - **MCP로는 정적 자산 업로드를 못 한다.** MCP가 요청마다 로그인 정보를 붙여 업로드 전용 임시 토큰이 무시된다(401). `cf_mcp.mjs deploy`는 `web/`을 Worker 안에 묶어 올린다. Git 배포가 한 번 돌면 원래 구성으로 바뀐다.
 - **무료 플랜은 계정 전체에서 Cron Trigger 5개까지.** 매일 작업이 필요 없는 D1 앱은 `wrangler.toml`에서 `crons = []`로 끈다. Supabase 앱은 끄지 않는다(7일간 요청이 없으면 프로젝트가 멈춘다).

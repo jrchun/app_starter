@@ -50,8 +50,9 @@ AI가 [`docs/AGENT_SETUP.md`](docs/AGENT_SETUP.md)를 읽고 저장소 만들기
 
 ### 1. 내 저장소 만들기 (1분)
 
-1. 이 페이지 위쪽 초록색 **Use this template** 버튼 › **Create a new repository**
-2. Owner는 내 계정, Repository name은 앱 이름을 영문 소문자와 하이픈으로 (예: `gym-log`)
+1. 이 링크를 엽니다: **https://github.com/new?template_name=app_starter&template_owner=jrchun**
+   (또는 이 페이지 위쪽 초록색 **Use this template** › **Create a new repository**)
+2. Repository name에 **앱 이름**을 영문 소문자와 하이픈으로 적습니다 (예: `gym-log`). 이 이름이 사이트 주소가 됩니다.
 3. Public / Private 아무거나 고르고 **Create repository**
 
 > 버튼이 안 보이면 GitHub에 로그인했는지 확인하세요.
@@ -59,30 +60,30 @@ AI가 [`docs/AGENT_SETUP.md`](docs/AGENT_SETUP.md)를 읽고 저장소 만들기
 ### 2. Claude Code에서 시작하기
 
 1. claude.ai/code에서 새 세션을 열고, 방금 만든 저장소를 고릅니다.
-2. 만들고 싶은 것을 평소 말투로 적습니다.
+2. 만들고 싶은 것을 평소 말투로 적고 "배포까지 해 줘"라고 덧붙입니다.
 
-   > 운동 기록 앱을 만들고 싶어. 날짜별로 종목·무게·횟수를 적고, 이번 주 합계를 보여 줘. 폰에서 주로 쓸 거야.
+   > 운동 기록 앱 만들어서 배포까지 해 줘. 날짜별로 종목·무게·횟수를 적고, 이번 주 합계를 보여 줘. 폰에서 주로 쓸 거야.
 
-3. Claude가 만들고, 테스트하고, 화면 캡처까지 확인한 뒤 보고합니다. 마음에 안 드는 곳은 그대로 말하면 고칩니다.
+3. Claude가 기획 요약(화면·기능·저장 방식)을 한 번 보여 주고 확인을 받습니다. 그다음 만들고, 테스트하고, 화면 캡처까지 확인한 뒤 보고합니다. 마음에 안 드는 곳은 그대로 말하면 고칩니다.
 
 ### 3. 인터넷에 올리기 (처음 한 번, 10분 정도)
 
 **토큰이나 열쇠 같은 값을 만들 필요가 없습니다.** 각 서비스에 브라우저로 로그인만 하면 Claude가 나머지를 합니다.
-사람이 할 일은 아래 다섯 가지이고, **이 순서대로** 합니다. ④는 ②와 ③이 끝난 뒤에 해야 합니다. 자세한 순서와 흔한 실수는 [`docs/SETUP.md`](docs/SETUP.md)에 있습니다.
+사람이 할 일은 아래 다섯 가지이고, **이 순서대로** 합니다. ④는 ③이 끝난 뒤에 해야 합니다. 자세한 순서와 흔한 실수는 [`docs/SETUP.md`](docs/SETUP.md)에 있습니다.
 
 | # | 할 일 | 어디서 |
 |---|---|---|
 | ① | (처음 한 번) Cloudflare **로그인 버튼** 누르기. claude.ai는 설정 › 커넥터 › 사용자 지정 커넥터 › `https://mcp.cloudflare.com/mcp` | 브라우저 |
-| ② | Claude가 데이터베이스와 사이트를 만들고 주소를 알려 줌. claude.ai에서는 "사이트 주소에 접속하게 해 달라"는 **승인 창**이 한 번 뜨니 허락 | Claude Code |
+| ② | claude.ai에서는 "사이트 주소에 접속하게 해 달라"는 **승인 창**이 한 번 뜹니다. 허락 | Claude Code |
 | ③ | Claude가 준 PR 링크에서 **Merge** 버튼 (변경을 `main`에 합치기) | GitHub |
-| ④ | **자동 배포 연결**: Cloudflare › Workers 및 Pages › 내 앱(②에서 Claude가 만든 것) › 설정 › Builds › **Connect** › GitHub › 1에서 만든 저장소. 처음이면 GitHub에서 Cloudflare 앱 설치를 허락 | Cloudflare |
-| ⑤ | Worker › 설정 › 변수 및 비밀 › **Secret** `WRITE_TOKEN` = 내가 정한 **편집 암호** | Cloudflare |
+| ④ | **올리기**: Cloudflare › Workers 및 Pages › **만들기** › **GitHub** › 1에서 만든 저장소 › **배포**. 처음이면 GitHub에서 Cloudflare 앱 설치를 허락. 이것으로 사이트가 생기고, 이후 Merge할 때마다 자동으로 바뀝니다 | Cloudflare |
+| ⑤ | 만들어진 Worker › 설정 › 변수 및 비밀 › **Secret** `WRITE_TOKEN` = 내가 정한 **편집 암호** | Cloudflare |
 
 끝나면 Claude가 사이트(`https://앱이름.내계정.workers.dev`)를 직접 검사하고 결과를 알려 줍니다.
 마지막으로 폰에서 사이트를 열어 아무 값이나 고치고, 편집 암호를 한 번 넣어 **"저장됨"**이 뜨면 완성입니다.
 
 > **꼭 기억할 것**
-> - **Pages가 아니라 Workers**입니다. Claude가 만든 Worker에 연결하세요.
+> - **Pages가 아니라 Workers**입니다. 이름은 저장소 이름 그대로 두세요.
 > - 편집 암호는 **채팅에 붙여 넣지 마세요.** Cloudflare 설정 화면에만 넣습니다.
 > - 매일 자동 작업은 Cloudflare 안에서 돕니다(따로 설정할 것 없음). 무료 플랜은 계정 전체에서 5개 앱까지 매일 작업을 쓸 수 있습니다.
 

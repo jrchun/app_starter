@@ -4,28 +4,26 @@
 사용자는 개발 지식이 많지 않다. **모든 대화와 보고는 한국어로, 쉬운 말로** 한다(자세한 규칙은 `CLAUDE.md` 맨 위 "언어").
 아래 "사람에게 물을 것"이 아닌 일은 묻지 말고 진행한다. 끝나면 실제 사이트를 직접 확인한 결과로 보고한다.
 
-## 한눈에 보는 순서 (D1 모드, claude.ai 클라우드 세션 기준)
+## 한눈에 보는 순서 (claude.ai 클라우드 세션 기준)
 
-사람이 할 일은 ★. 시작할 때 이 표를 사용자에게 보여 주고, 지금 몇 번인지 알리며 진행한다.
+사람이 할 일은 ★. 시작할 때 이 표를 사용자에게 보여 주고, 지금 몇 번인지 알리며 진행한다. **사람에게 묻거나 부탁하는 일은 표의 ★ 말고는 만들지 않는다.**
 
 | # | 누가 | 무엇을 | 이 문서 |
 |---|---|---|---|
-| 1 | ★사람 | GitHub `jrchun/app_starter` › Use this template › 내 저장소 만들기, 그 저장소로 세션 열기 | 3 |
+| 1 | ★사람 | 템플릿 링크로 내 저장소 만들기(**저장소 이름 = 앱 이름**), 그 저장소로 세션 열기 | 3 |
 | 2 | ★사람 | (처음 한 번) claude.ai 설정 › 커넥터에 Cloudflare MCP 연결 | 1 |
-| 3 | AI→★사람 | 앱 내용·DB 모드·앱 이름 묻고 답 받기 | 2 |
-| 4 | AI | 앱 만들기, `npm test`, 로컬 화면 확인 | 4 |
-| 5 | AI | MCP로 D1 만들기(`prepare`) → `fill` → 커밋 | 5 |
-| 6 | AI | MCP로 첫 배포(`deploy`) → 사이트 주소 생김. Cloudflare에 Worker를 **AI가** 만든다 | 6-1 |
-| 7 | AI→★사람 | 사이트 검사를 위해 사이트 주소 허용 승인 창(클라우드 세션만) → 검사·화면 확인 | 8, 7 |
-| 8 | AI→★사람 | PR 만들기 → 사람이 **Merge**해서 `main`에 반영 | 6-1 |
-| 9 | ★사람 | Cloudflare › Worker › 설정 › Builds › **Connect** › 내 저장소(처음이면 GitHub에서 Cloudflare 앱 허락) | 6-2 |
-| 10 | ★사람 | Worker › 설정 › 변수 및 비밀 › Secret `WRITE_TOKEN` = 편집 암호 | 6-3 |
-| 11 | AI→★사람 | `status`로 자동 배포 확인, 사이트 재검사 → 폰에서 "저장됨" 확인 | 7 |
+| 3 | AI→★사람 | "무슨 앱인가요?" 한 번만 묻고, AI가 기획 요약(화면·기능·DB 모드)을 만들어 **한 번에** 확인받기 | 2 |
+| 4 | AI→★사람 | MCP로 D1 만들기(`prepare`) → 사이트 주소가 정해지면 바로 주소 허용 승인 창(클라우드 세션만) | 5, 8 |
+| 5 | AI | 앱 만들기, `npm test`, 로컬 화면 확인, `fill` → 커밋 | 4, 5 |
+| 6 | AI→★사람 | PR 만들기 → 사람이 **Merge**해서 `main`에 반영 | 6-1 |
+| 7 | ★사람 | Cloudflare › Workers 및 Pages › **만들기 › GitHub에서 가져오기** › 내 저장소 › 배포(처음이면 GitHub에서 Cloudflare 앱 허락). 이것으로 첫 배포와 자동 배포 연결이 한 번에 끝난다 | 6-2 |
+| 8 | ★사람 | Worker › 설정 › 변수 및 비밀 › Secret `WRITE_TOKEN` = 편집 암호 (D1 모드) | 6-3 |
+| 9 | AI | 사이트 검사·폰 폭 화면 확인 → 보고 | 7 |
 
 - 이후 고칠 때: AI가 고치고 PR → 사람이 Merge → Cloudflare가 자동 배포 → AI가 검사.
-- 순서가 중요한 이유: 9번 Connect는 "이미 있는 Worker에 저장소를 잇는" 버튼이라 6번이 먼저다. 연결 즉시 `main`을 가져가 배포하므로 `main`에 앱 코드와 채운 `wrangler.toml`이 있어야 한다(8번이 먼저).
-- Supabase 모드: 6번(MCP 첫 배포)이 너무 커서 건너뛰고, 8번 Merge 뒤 9번을 "만들기 › GitHub › 저장소 선택"(새 Worker)으로 한다.
-- 내 컴퓨터: 1번은 `gh repo create`, 7번 승인 창 없음, 8번은 AI가 `main`에 바로 올린다.
+- 순서가 중요한 이유: 7번은 가져오는 순간 `main`을 배포한다. 그래서 `main`에 앱 코드와 채운 `wrangler.toml`이 있어야 한다(6번이 먼저).
+- 내 컴퓨터: 1번은 `gh repo create`, 4번 승인 창 없음, 6번은 AI가 `main`에 바로 올린다.
+- MCP 첫 배포(`cf_mcp.mjs deploy`)는 예비 수단이다(6-4). 실제 앱은 파일이 커서 보통 쓸 수 없다.
 
 ## 0. 원칙
 
@@ -53,13 +51,18 @@
 - 계정이 여러 개면 `execute`를 부를 때 `account_id`를 넘긴다(`GET /accounts`로 목록을 본 뒤 사람에게 고르게 한다).
 - 연결이 안 되면 무엇이 막혔는지 그대로 말한다. 대안으로 내 컴퓨터에서 `npx wrangler@4 login`(이것도 브라우저 로그인)을 안내한다.
 
-## 2. 사람에게 물을 것 (처음에 한 번에)
+## 2. 사람에게 물을 것 (한 번에 끝낸다)
 
-1. 만들고 싶은 앱: 무엇을 기록·계산하는지, 누가 쓰는지, 주로 폰에서 쓰는지
-2. **DB 모드**. 아래 기준으로 추천하고 확인받는다.
+묻는 것은 **"무슨 앱인가요?"** 하나다. 나머지는 AI가 정해서 아래 기획 요약으로 한 번에 보여 주고 "이대로 진행할까요?"만 확인받는다. 사용자가 처음 요청에 앱 설명을 이미 적었으면 묻지 않고 바로 기획 요약을 보여 준다.
+
+기획 요약에 넣을 것(짧게):
+1. 한 줄 설명, 누가 쓰는지, 주 사용 기기(기본: 폰)
+2. 화면과 기능 목록(첫 버전에 넣을 것만)
+3. **DB 모드**(AI가 정한다)
    - **D1 모드(기본)**: 나 혼자, 또는 편집 암호를 아는 몇 명이 같은 데이터를 함께 쓴다. 로그인 없음. 읽기는 공개.
-   - **Supabase 모드**: 사람마다 로그인하고 **자기 데이터만** 본다(했냐처럼). 무료 플랜은 계정당 프로젝트 **2개**까지(일시 정지한 것은 세지 않음).
-3. 앱 이름: 영문 소문자·숫자·하이픈. Worker 이름, D1 이름, 사이트 주소가 된다.
+   - **Supabase 모드**: 사람마다 로그인하고 **자기 데이터만** 본다. 무료 플랜은 계정당 프로젝트 **2개**까지(일시 정지한 것은 세지 않음).
+4. 앱 이름: **저장소 이름을 그대로 쓴다**(영문 소문자·숫자·하이픈으로 맞춘다). Worker 이름, D1 이름, 사이트 주소(`https://<앱이름>.<하위도메인>.workers.dev`)가 된다. 이름이 다르면 7번 가져오기에서 사람이 이름을 고쳐야 해서 실수가 생긴다.
+5. 매일 작업이 필요한지(필요 없으면 `crons = []`로 끈다. 무료 플랜은 계정 전체 5개)
 
 ## 3. 내 저장소 만들기 (필수)
 
@@ -67,7 +70,7 @@
 (단순히 내려받기(clone)만 해서는 안 된다. Cloudflare가 사용자 계정의 저장소를 보고 자동 배포하기 때문이다.)
 
 - 내 컴퓨터: `gh repo create <앱이름> --template jrchun/app_starter --private --clone`, 그다음 그 폴더에서 작업
-- 클라우드 세션: 사람에게 GitHub의 **Use this template › Create a new repository**를 부탁하고(README 1번), 그 저장소로 세션을 다시 열어 달라고 한다
+- 클라우드 세션: 사람에게 이 링크를 주고 저장소를 만들어 달라고 한다: `https://github.com/new?template_name=app_starter&template_owner=jrchun` (Repository name = 앱 이름). 그 저장소로 세션을 다시 열어 달라고 한다.
 
 ## 4. 앱 만들기
 
@@ -101,25 +104,26 @@
 
 **Pages가 아니라 Workers다.** `wrangler.toml`이 Workers 형식(main + [assets] + [triggers])이다.
 
-### 6-1. 첫 배포: Cloudflare MCP (사람이 기다리지 않게 바로 띄운다)
-1. `node scripts/cf_mcp.mjs deploy` → `.wrangler/mcp/deploy.js` 내용을 그대로(다시 타이핑하지 말고 파일을 읽어서) `execute`의 `code`로 넘긴다. Worker 올리기, 예약 작업 시각 등록, `workers.dev` 켜기를 하고 `url`을 돌려준다.
-2. 7번대로 사이트를 검사하고 폰 폭 화면을 본다.
-3. `main`에 반영한다.
-   - 클라우드 세션: 작업 브랜치에 올리고 **PR을 만든다.** 사용자가 배포를 요청했으면 PR 생성까지 요청한 것으로 본다. PR 링크를 주고 "Merge 버튼을 눌러 주세요"라고 부탁한다. Merge 전에는 6-2로 넘어가지 않는다.
-   - 내 컴퓨터: `main`에 바로 올린다.
-   - MCP로는 정적 자산 업로드를 할 수 없어서(아래 시험 기록) `web/`을 Worker 안에 묶어 올린다. 화면과 동작은 같다. Git 자동 배포가 한 번 돌면 원래 구성(정적 자산)으로 바뀐다.
-   - 스크립트가 "너무 큽니다"라고 하면(100KB 넘음. Supabase 모드는 라이브러리 때문에 항상 넘는다) MCP 배포를 건너뛴다. 대신 6-2를 "새 Worker"로 한다: 대시보드 › Workers 및 Pages › **만들기(Create application)** › GitHub › 저장소 선택 › 이름 = `wrangler.toml`의 `name` › 배포. 그 뒤 `cf_mcp.mjs status`로 Worker와 예약 작업이 생겼는지 본다.
+### 6-1. `main`에 반영 (PR → Merge)
+- 클라우드 세션: 작업 브랜치에 올리고 **PR을 만든다.** 사용자가 배포를 요청했으면 PR 생성까지 요청한 것으로 본다. PR 링크를 주고 "Merge 버튼을 눌러 주세요"라고 부탁한다. Merge 전에는 6-2로 넘어가지 않는다.
+- 내 컴퓨터: `main`에 바로 올린다.
 
-### 6-2. 자동 배포 연결: 사람이 앱마다 한 번 (필수)
-`main`에 올릴 때마다 Cloudflare가 저장소를 가져가 `npx wrangler deploy`로 배포하게 한다(Workers Builds). 토큰은 Cloudflare가 스스로 만든다.
-- 먼저 확인: `main`에 앱 코드와 채운 `wrangler.toml`이 들어갔는가(6-1의 3). 아니면 연결 즉시 빈 틀이 배포되거나 이름이 안 맞아 실패한다.
-- 사람에게 부탁(6-1로 Worker가 이미 있을 때): 대시보드 › Workers 및 Pages › `<앱이름>` › 설정(Settings) › **빌드(Builds)** › **연결(Connect)** › GitHub › 3에서 만든 저장소, 브랜치 `main`, 빌드 명령 비움, 배포 명령 `npx wrangler deploy`.
+### 6-2. Cloudflare에서 저장소 가져오기: 사람이 앱마다 한 번 (기본 경로)
+첫 배포와 자동 배포 연결(Workers Builds)이 한 번에 끝난다. 이후 `main`에 올릴 때마다 Cloudflare가 저장소를 가져가 `npx wrangler deploy`로 배포한다. 토큰은 Cloudflare가 스스로 만든다.
+- 사람에게 부탁: 대시보드 › Workers 및 Pages › **만들기(Create application)** › **GitHub** › 저장소 선택 › 이름이 `wrangler.toml`의 `name`과 같은지 확인 › 빌드 명령 비움, 배포 명령 `npx wrangler deploy`(기본값) › **배포**.
   - 처음이면 GitHub 화면이 뜨고 Cloudflare 앱 설치를 묻는다. 그 저장소(또는 모든 저장소)를 허용한다. 계정당 처음 한 번만 묻는다.
-  - 화면 이름은 바뀔 수 있다. 다르면 Cloudflare MCP `docs`로 "Workers Builds connect repository"를 찾아 현재 순서를 안내한다.
-- 연결 뒤 사람에게 "빌드 다시 실행" 또는 아무 커밋 푸시를 부탁하고, `node scripts/cf_mcp.mjs status` → `execute`로 `git_build`가 성공인지 본다(Workers CI 읽기 권한이 없으면 대시보드 › 배포 기록을 보게 한다).
-- **연결 뒤에는 MCP `deploy`를 쓰지 않는다.** 고치면 `main`에 올리는 것이 배포다. MCP `deploy`는 Git 배포가 깨졌을 때 임시로만 쓴다.
-- AI가 API로 연결하지 않는 이유: GitHub 쪽 앱 설치 승인은 사람만 할 수 있고(공식 문서도 대시보드에서 한 번 하라고 한다), 연결에 필요한 배포용 토큰(build token)도 대시보드가 만들어 준다. 두 번째 앱부터는 Workers Builds API(`workers-ci` 쓰기 권한)로 연결할 수 있을 수도 있지만 아직 확인하지 않았다.
+  - 화면 이름은 바뀔 수 있다. 다르면 Cloudflare MCP `docs`로 "Workers Builds connect a new Worker"를 찾아 현재 순서를 안내한다.
+- 끝나면 `node scripts/cf_mcp.mjs status` → `execute`로 Worker·예약 작업이 생겼는지 보고, 7절대로 사이트를 검사한다.
 - Worker 이름과 `wrangler.toml`의 `name`이 다르면 빌드가 실패한다.
+- AI가 API로 대신하지 않는 이유: GitHub 쪽 앱 설치 승인은 사람만 할 수 있고(공식 문서도 대시보드에서 한 번 하라고 한다), 연결에 필요한 배포용 토큰(build token)도 대시보드가 만들어 준다.
+
+### 6-4. (예비) MCP 첫 배포
+사람이 7번을 하기 전에 화면을 먼저 띄워 보고 싶을 때, 또는 Git 배포가 깨졌을 때만 쓴다.
+1. `node scripts/cf_mcp.mjs deploy` → `.wrangler/mcp/deploy.js` 내용을 그대로(다시 타이핑하지 말고 파일을 읽어서) `execute`의 `code`로 넘긴다. Worker 올리기, 예약 작업 시각 등록, `workers.dev` 켜기를 하고 `url`을 돌려준다.
+   - MCP로는 정적 자산 업로드를 할 수 없어서(아래 시험 기록) `web/`을 Worker 안에 묶어 올린다. 화면과 동작은 같다. Git 배포가 한 번 돌면 원래 구성(정적 자산)으로 바뀐다.
+   - 스크립트가 "너무 큽니다"라고 하면(100KB 넘음. 큰 데이터 파일이 있거나 Supabase 모드면 넘는다) 쓰지 않는다.
+2. 이렇게 Worker를 먼저 만들었으면 6-2 대신 기존 Worker에 연결한다: Worker › 설정 › **Builds › Connect** › GitHub › 저장소, 브랜치 `main`.
+3. Git 연결 뒤에는 MCP `deploy`를 쓰지 않는다.
 
 ### 6-3. 편집 암호 (D1 모드)
 사람에게 부탁: 대시보드 › Worker › 설정 › 변수 및 비밀 › 추가 › 형식 **Secret**, 이름 `WRITE_TOKEN`, 값 = 편집 암호. AI는 값을 보지 않는다. (내 컴퓨터라면 `npx wrangler@4 secret put WRITE_TOKEN`으로 사람이 직접 입력해도 된다.)
@@ -140,7 +144,7 @@
 ## 8. 클라우드 세션(claude.ai/code)에서 할 때
 
 클라우드 세션의 컨테이너는 정해진 주소에만 나갈 수 있다. 처음 배포하는 앱이면 이렇게 한다.
-- 새 세션은 보통 기본(Default) 환경에서 시작한다. 사이트 주소는 6-1의 `deploy` 결과(`url`)로 알 수 있으니, 그때 바로 아래처럼 허용을 요청한다.
+- 새 세션은 보통 기본(Default) 환경에서 시작한다. 사이트 주소는 5번 `prepare` 결과(`url`)로 미리 알 수 있으니, **그때 바로** 아래처럼 허용을 요청한다(나중에 작업을 끊지 않게).
 - **사이트 검사가 막히면**(`check_site.mjs`가 `fetch failed`, 프록시 403): 환경 도구(`get_environment` → 기본 환경이면 `create_environment`)로 **이 저장소 전용 개인 환경**을 만들고 허용 호스트에 `<앱이름>.<하위도메인>.workers.dev`만 넣는다. 사람이 승인 창에서 허락하면 이 세션에 바로 적용된다. 다른 저장소와 함께 쓰는 기본 환경은 건드리지 않는다.
 - **Cloudflare API(api.cloudflare.com), `wrangler`는 컨테이너에서 쓰지 않는다.** 모든 Cloudflare 작업은 MCP `execute`로 한다. MCP 실행 환경도 Cloudflare API 밖(사이트 주소 포함)으로는 나갈 수 없으므로, 사이트 검사는 컨테이너에서 한다.
 - **Supabase**: 저장소 `.mcp.json`의 연결은 실패할 수 있다. claude.ai의 Supabase 커넥터(도구 이름 `mcp__Supabase__...`)를 쓴다. 둘 다 없으면 사람에게 claude.ai 설정 › 커넥터에서 Supabase를 연결해 달라고 한다.
@@ -152,6 +156,10 @@
 - Supabase 모드: Supabase MCP로 프로젝트 생성(서울) → 스키마 적용 → 키 조회 → `use_supabase.py` → 로컬 실행. 로그인, 메모 추가·삭제, 다른 계정에서는 안 보임(RLS), 새로고침 뒤 로그인 유지, `check_site.mjs` 전부 ok.
 - D1 모드 클라우드 세션 배포(`starter-test`, 토큰 없이 Cloudflare MCP만): `cf_mcp.mjs prepare`(D1 생성·스키마) → `fill` → `deploy`(Worker·예약 작업·`workers.dev`) → `status`까지 MCP로 됨. `check_site.mjs` 전부 ok(편집 암호 미설정 경고만), 400px 라이트·다크 확인. 예약 작업은 `wrangler dev --test-scheduled`로 로컬에서 `job_log` 기록 확인(배포본의 실제 예약 실행 시각 확인은 아직).
   - MCP 실행 환경은 api.cloudflare.com 요청에 로그인 정보를 강제로 붙인다. 그래서 업로드 전용 임시 토큰만 받는 정적 자산 업로드(`/workers/assets/upload`)가 401로 실패한다 → `cf_mcp.mjs deploy`는 `web/`을 Worker 안에 묶는다.
-  - 클라우드 세션 네트워크는 api.cloudflare.com과 `*.workers.dev`를 막는다. MCP 실행 환경의 fetch도 Cloudflare API 밖으로는 403 → 8번처럼 저장소 전용 환경에 사이트 주소를 허용했다.
+  - 클라우드 세션 네트워크는 api.cloudflare.com과 `*.workers.dev`를 막는다. MCP 실행 환경의 fetch도 Cloudflare API 밖으로는 403 → 8절처럼 저장소 전용 환경에 사이트 주소를 허용했다.
   - Workers Builds API(Git 연결·빌드 기록)는 커넥터에 `workers-ci` 권한이 없으면 403이다. 연결 생성에는 GitHub 앱 설치와 배포용 토큰이 필요해서 대시보드 연결을 표준으로 정했다.
-- 아직 확인하지 못한 것: 6-2 Git 연결 뒤 첫 자동 배포(MCP로 올린 Worker가 정적 자산 구성으로 바뀌는지), `gh repo create --template`, Codex에서 MCP 연결.
+- 실제 앱(`jrchun/asset` → Worker `rebalance`, 2026-11-12): 템플릿 → 앱 구현(테스트 46개) → MCP `prepare` → `fill` → PR Merge → Cloudflare "만들기 › GitHub"로 첫 배포(정적 자산 구성으로 올라감, 예약 작업 등록) → 편집 암호 → `check_site.mjs` 전부 ok. 두 번째 Merge 때도 1분 안에 자동 배포되고 편집 암호가 유지됨을 확인.
+  - MCP 첫 배포 코드는 954KB(종목 목록 파일 732KB)라 쓸 수 없었다 → "만들기 › GitHub"를 기본 경로로 바꿨다.
+  - 앱 이름(`rebalance`)과 저장소 이름(`asset`)이 달랐다. 동작은 되지만 헷갈려서 "저장소 이름 = 앱 이름"을 기본으로 정했다.
+  - 배포본의 예약 작업이 실제 시각(07:30 KST)에 돌아 `job_log`에 기록된 것을 `starter-test`에서 확인.
+- 아직 확인하지 못한 것: `gh repo create --template`, Codex에서 MCP 연결.
