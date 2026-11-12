@@ -17,15 +17,12 @@
 | # | 할 일 | 어디서 | 누가 |
 |---|---|---|---|
 | 1 | `https://github.com/new?template_name=app_starter&template_owner=jrchun` › Repository name = 앱 이름 › Create. 기본 브랜치는 `main` | GitHub | 사람 |
-| 2 | Claude Code·Codex에 Cloudflare MCP 연결(브라우저 로그인). claude.ai는 설정 › 커넥터 › 사용자 지정 커넥터 › `https://mcp.cloudflare.com/mcp` | 클라이언트 | 사람(처음 한 번) |
+| 2 | Claude Code·Codex에 Cloudflare MCP 연결(브라우저 로그인, **Workers CI 쓰기**까지 허용). claude.ai는 설정 › 커넥터 › 사용자 지정 커넥터 › `https://mcp.cloudflare.com/mcp` | 클라이언트 | 사람(처음 한 번) |
 | 3 | `cf_mcp.mjs prepare` → MCP 실행(D1·사이트 주소) → 클라우드 세션은 사이트 주소 허용 승인 창 → 앱 만들기 → `fill` → 커밋 | Claude | Claude(승인은 사람) |
-| 4 | Claude가 만든 PR을 Merge해서 `main`에 반영(내 컴퓨터면 Claude가 `main`에 바로 올림). **5번보다 먼저** | GitHub | 사람 |
-| 5 | Workers 및 Pages › **만들기** › **GitHub** › 1의 저장소 › 이름 = `wrangler.toml`의 `name`, 빌드 명령 비움, 배포 명령 `npx wrangler deploy` › 배포. 처음이면 GitHub에서 Cloudflare 앱 설치를 허락 | Cloudflare | 사람(앱마다 한 번) |
-| 6 | Worker › 설정 › 변수 및 비밀 › 추가 › 형식 **Secret**, 이름 `WRITE_TOKEN`, 값 = 편집 암호 (D1 모드) | Cloudflare | 사람 |
-| 7 | `node scripts/check_site.mjs https://<이름>.<계정>.workers.dev` 전부 ok, `cf_mcp.mjs status`로 예약 작업 확인 | 터미널·MCP | Claude |
-| 8 | 폰에서 열어 아무 값이나 고치고, 편집 암호 넣고 "저장됨" 확인 | 폰 | 사람 |
-
-(예비) 5번 전에 화면을 먼저 보고 싶으면 Claude가 `cf_mcp.mjs deploy`로 MCP 첫 배포를 할 수 있다(작은 앱만). 그 경우 5번은 Worker › 설정 › **Builds › Connect**로 한다.
+| 4 | PR → `npm test` 통과 → Claude가 Merge(내 컴퓨터면 `main`에 바로) | GitHub | Claude |
+| 5 | `cf_mcp.mjs connect` → MCP 실행: Cloudflare에 저장소 연결·첫 빌드. 실패하면 사람이 Workers 및 Pages › **만들기** › **GitHub** › 저장소 › 배포(처음이면 GitHub에서 Cloudflare 앱 설치, "모든 저장소" 허용 권장) | Cloudflare | Claude(안 되면 사람) |
+| 6 | `node scripts/check_site.mjs https://<이름>.<계정>.workers.dev` 전부 ok, `cf_mcp.mjs status`로 빌드·예약 작업 확인 | 터미널·MCP | Claude |
+| 7 | 폰에서 열어 아무 값이나 고치고 **편집 암호 정하기**(처음 한 번, 6자 이상) → "저장됨" | 폰 | 사람 |
 
 ## 함정 (실제로 겪은 것)
 
@@ -37,7 +34,8 @@
 - **MCP로는 정적 자산 업로드를 못 한다.** MCP가 요청마다 로그인 정보를 붙여 업로드 전용 임시 토큰이 무시된다(401). `cf_mcp.mjs deploy`는 `web/`을 Worker 안에 묶어 올린다. Git 배포가 한 번 돌면 원래 구성으로 바뀐다.
 - **무료 플랜은 계정 전체에서 Cron Trigger 5개까지.** 매일 작업이 필요 없는 D1 앱은 `wrangler.toml`에서 `crons = []`로 끈다. Supabase 앱은 끄지 않는다(7일간 요청이 없으면 프로젝트가 멈춘다).
 - **예약 작업의 시각은 UTC.** `30 22 * * *`는 한국 시각 07:30이다. 결과와 오류는 대시보드 › Worker › 로그에서 본다.
-- **편집 암호가 없으면 저장이 전부 막힌다.** `check_site.mjs`가 "편집 암호(WRITE_TOKEN)가 아직 없음" 경고로 알려 준다.
+- **편집 암호는 먼저 정한 사람이 임자다.** 사이트에서 처음 저장할 때 정하므로, 주소를 공유하기 전에 본인이 먼저 정한다. 아직이면 `check_site.mjs`가 "편집 암호가 아직 없음"으로 알려 준다. 잊으면 D1 `settings`의 `write_hash` 행을 지우면 다시 정할 수 있다.
+- **예전 앱에 이 기능을 넣을 때는 스키마를 다시 적용한다.** `settings` 표가 없으면 사이트에서 암호를 정할 수 없다(`cf_mcp.mjs prepare`를 다시 실행).
 - **Worker 이름과 `wrangler.toml`의 `name`이 달라도** 문제가 생길 수 있다. 같은 이름을 쓴다.
 - **공개 저장소에 비밀을 올리지 않는다.** 계정 ID, D1 ID, Supabase publishable 키는 비밀이 아니다. 편집 암호만 비밀이다.
 - **Claude Code 클라우드 세션에서 작업할 때**: 컨테이너는 api.cloudflare.com과 `*.workers.dev`에 나갈 수 없다. Cloudflare 작업은 MCP로 하고, 사이트 검사를 위해 이 저장소 전용 환경에 사이트 주소를 허용한다(AGENT_SETUP 8). 저장소 `.mcp.json`의 Supabase 연결은 실패할 수 있으니 claude.ai의 Supabase 커넥터를 쓴다.

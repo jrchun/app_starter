@@ -19,7 +19,8 @@ codex mcp login cloudflare
 ```
 
 Codex 안에서 `/mcp`로 연결을 확인한다. API 토큰은 만들지 않는다.
-Cloudflare 준비·첫 배포는 `node scripts/cf_mcp.mjs prepare|fill|deploy`가 만든 코드를 Cloudflare MCP `execute`로 실행한다(`docs/AGENT_SETUP.md` 5~6). 이후 배포는 `main`에 올리면 Cloudflare가 한다.
+Cloudflare 준비·연결은 `node scripts/cf_mcp.mjs prepare|fill|connect`가 만든 코드를 Cloudflare MCP `execute`로 실행한다(`docs/AGENT_SETUP.md` 5~6). 이후 배포는 `main`에 올리면 Cloudflare가 한다.
+고친 것은 PR로 올리고 `npm test`가 통과하면 AI가 직접 Merge한다(사용자가 미리 허락함, `docs/AGENT_SETUP.md` 6-1).
 비밀번호(편집 암호)는 채팅으로 받지 않는다.
 
 ## 확인 명령

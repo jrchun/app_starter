@@ -12,12 +12,12 @@ async function current(env) {
 
 export async function GET({ request, env }) {
   const body = await current(env);
-  if (canWrite(request, env)) await logUsage(env, 'open');
+  if (await canWrite(request, env)) await logUsage(env, 'open');
   return json(body);
 }
 
 export async function PUT({ request, env }) {
-  if (!canWrite(request, env)) return json({ detail: '편집 암호가 필요합니다.' }, 401);
+  if (!(await canWrite(request, env))) return json({ detail: '편집 암호가 필요합니다.' }, 401);
   const text = await request.text();
   if (text.length > MAX_BYTES) return json({ detail: '문서가 너무 큽니다.' }, 413);
   let body;

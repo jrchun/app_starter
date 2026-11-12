@@ -19,7 +19,8 @@ await check('Worker·DB 연결 (/api/health)', async () => {
   const r = await fetch(base + '/api/health'); const j = await r.json().catch(() => ({}));
   if (j.mode === 'supabase') { mode = 'supabase'; expect(r.ok, 'HTTP ' + r.status); return 'Supabase 모드'; }
   expect(r.ok && j.db, 'D1에 연결되지 않음: HTTP ' + r.status + ' ' + JSON.stringify(j));
-  return j.writeTokenSet ? 'D1 모드, 편집 암호 설정됨' : '경고: 편집 암호(WRITE_TOKEN)가 아직 없음 — 저장이 모두 막힌다';
+  const set = j.passwordSet ?? j.writeTokenSet;
+  return set ? 'D1 모드, 편집 암호 정해짐' : '알림: 편집 암호가 아직 없음 — 사이트에서 처음 저장할 때 정한다(주소를 공유하기 전에 정할 것)';
 });
 if (mode === 'd1') {
   await check('문서 읽기 (/api/doc)', async () => {
