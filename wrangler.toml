@@ -1,5 +1,5 @@
 # Cloudflare Worker 설정(이 파일이 기준이다). name은 대시보드의 Worker 이름과 같아야 한다.
-# name, database_name, database_id는 scripts/setup_cloudflare.py가 채운다.
+# name, database_name, database_id는 scripts/cf_mcp.mjs fill(또는 wrangler d1 create 출력)로 채운다.
 # 편집 암호(WRITE_TOKEN)는 비밀값이라 여기 두지 않는다: 대시보드 > Worker > 설정 > 변수 및 비밀 > Secret.
 name = "my-app"
 main = "./src/worker.js"
@@ -15,3 +15,7 @@ binding = "ASSETS"
 binding = "DB"
 database_name = "my-app"
 database_id = "__D1_DATABASE_ID__"
+
+# 예약 작업(src/jobs.js). UTC 기준: 매일 07:30 KST. 무료 플랜은 계정 전체에서 Cron Trigger 5개까지다.
+[triggers]
+crons = ["30 22 * * *"]

@@ -4,8 +4,8 @@
 
 하는 일
   - examples/supabase/web의 예제 화면(로그인 + 내 메모)을 web/에 복사하고 연결 정보를 채운다
-  - wrangler.toml에서 D1 연결을 뺀다(Worker는 정적 화면과 /api/health만 맡는다)
-  - D1용 매일 작업(daily.yml)을 빼고 Supabase 잠들기 방지 작업(supabase-keepalive.yml)을 넣는다
+  - wrangler.toml에서 D1 연결을 빼고 [vars]에 Supabase 주소·공개 키를 넣는다
+    (Worker는 정적 화면과 /api/health, 그리고 매일 Supabase 잠들기 방지 예약 작업(src/jobs.js)을 맡는다)
 URL과 키는 공개해도 되는 값이다(publishable). 서비스 키(secret)는 넣지 않는다.
 스키마는 supabase/schema.sql. AI는 Supabase MCP(apply_migration)로, 사람은 대시보드 SQL Editor로 적용한다.
 """
@@ -48,18 +48,14 @@ def main(argv=None) -> int:
 
     wr = ROOT / "wrangler.toml"
     t = wr.read_text(encoding="utf-8")
-    t = re.sub(r"\n\[\[d1_databases\]\][^\[]*", "\n", t).rstrip() + "\n"
+    t = re.sub(r"\n\[\[d1_databases\]\]\n(?:[^\n]+\n)*", "\n", t)
+    t = re.sub(r"\n# Supabase 연결\(공개 값\).*", "", t, flags=re.S).rstrip() + "\n"
+    t += f'\n# Supabase 연결(공개 값). 매일 잠들기 방지 예약 작업(src/jobs.js)이 쓴다.\n[vars]\nSUPABASE_URL = "{url}"\nSUPABASE_KEY = "{key}"\n'
     wr.write_text(t, encoding="utf-8")
-
-    wf = ROOT / ".github" / "workflows"
-    (wf / "daily.yml").unlink(missing_ok=True)
-    ka = (EX / "supabase-keepalive.yml").read_text(encoding="utf-8")
-    (wf / "supabase-keepalive.yml").write_text(ka.replace("__SUPABASE_URL__", url).replace("__SUPABASE_PUBLISHABLE_KEY__", key), encoding="utf-8")
 
     print("Supabase 모드로 바꿨습니다.")
     print(" - web/: 로그인 + 내 메모 예제, web/js/config.js에 연결 정보")
-    print(" - wrangler.toml: D1 연결 제거")
-    print(" - .github/workflows: daily.yml 제거, supabase-keepalive.yml 추가")
+    print(" - wrangler.toml: D1 연결 제거, [vars]에 Supabase 주소·공개 키(매일 잠들기 방지 예약 작업용)")
     print("남은 일: supabase/schema.sql 적용, Supabase에서 이메일 확인(Confirm email) 끄기 — docs/AGENT_SETUP.md")
     return 0
 

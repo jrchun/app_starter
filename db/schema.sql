@@ -1,4 +1,4 @@
--- D1(SQLite) 스키마. 여러 번 실행해도 안전하다. 표를 추가하면 여기에 적고 scripts/setup_cloudflare.py를 다시 실행한다.
+-- D1(SQLite) 스키마. 여러 번 실행해도 안전하다. 표를 추가하면 여기에 적고 다시 적용한다(Cloudflare MCP: node scripts/cf_mcp.mjs prepare, 또는 wrangler d1 execute --remote).
 
 -- 앱 문서 하나(JSON)를 버전과 함께 저장한다. 다른 기기에서 먼저 고쳤으면 저장을 거절(409)한다.
 CREATE TABLE IF NOT EXISTS doc (
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS doc (
   updated_at TEXT NOT NULL
 );
 
--- 매일 작업 기록(jobs/daily.py).
+-- 예약 작업 기록(src/jobs.js).
 CREATE TABLE IF NOT EXISTS job_log (
   ts TEXT NOT NULL,
   job TEXT NOT NULL,
