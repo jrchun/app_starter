@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
 import { execFileSync } from 'node:child_process';
-import { parseToml, readConfig, fillToml, collectBundle, renderPrepare, renderDeploy, renderStatus, renderConnect } from '../scripts/cf_mcp.mjs';
+import { parseToml, readConfig, fillToml, collectBundle, renderPrepare, renderDeploy, renderStatus, renderConnect, subdomainCandidates } from '../scripts/cf_mcp.mjs';
 import { bundledAssets } from '../src/lib/bundled_assets.js';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
@@ -104,4 +104,17 @@ test('connect: GitHub 번호가 없으면 만들지 않고 방법을 알려 준�
   const out = execFileSync(process.execPath, ['scripts/cf_mcp.mjs', 'connect', '--github-account-id', '1', '--github-repo-id', '2', '--repo', 'me/gym-log'], { cwd: dir, encoding: 'utf8' });
   assert.match(out, /\.wrangler\/mcp\/connect\.js/);
   parses(fs.readFileSync(path.join(dir, '.wrangler/mcp/connect.js'), 'utf8'));
+});
+
+test('하위 도메인 후보: 소문자·하이픈으로 맞추고 여러 개를 준비한다', () => {
+  assert.deepEqual(subdomainCandidates('JRchun_X', () => '123'), ['jrchun-x', 'jrchun-x-apps', 'jrchun-x-app', 'jrchun-x-123']);
+  assert.equal(subdomainCandidates('', () => '1')[0], 'apps');
+});
+
+test('prepare: 하위 도메인은 없을 때만 만든다(있으면 PUT하지 않음)', () => {
+  const code = renderPrepare({ name: 'gym-log', schema: 'SELECT 1;', wantD1: false, subdomains: ['me', 'me-apps'] });
+  parses(code);
+  assert.match(code, /const SUBDOMAIN_CANDIDATES = \["me","me-apps"\]/);
+  const putAt = code.indexOf('method: "PUT"'), guardAt = code.indexOf('if (!sub) {');
+  assert.ok(guardAt > 0 && putAt > guardAt, 'PUT은 if (!sub) 안에 있어야 한다');
 });

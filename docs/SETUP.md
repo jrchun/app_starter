@@ -27,6 +27,7 @@
 ## 함정 (실제로 겪은 것)
 
 - **Pages가 아니라 Workers로 만든다.** 대시보드 기본 흐름이 Workers다. 이 틀의 `wrangler.toml`은 Workers 형식이라 Pages로 만들면 배포가 실패한다.
+- **`workers.dev` 하위 도메인은 계정당 하나이고 전 세계에서 겹치면 안 된다.** 처음 쓰는 계정이면 `cf_mcp.mjs prepare`가 GitHub 아이디로 만들어 준다. 한 번 정하면 바꾸지 않는다(모든 앱 주소가 바뀐다).
 - **Git 연결은 Worker 이름 = `wrangler.toml`의 `name`이어야 한다.** 다르면 빌드가 실패한다.
 - **자동 배포는 `main` 기준.** 클라우드 세션의 작업 브랜치에 올린 것은 배포되지 않는다. `main`에 합쳐야 한다.
 - **MCP 첫 배포는 실제 앱에서는 보통 못 쓴다.** 코드가 100KB를 넘으면(큰 데이터 파일, Supabase 라이브러리) MCP로 넘길 수 없다. 기본 경로는 Merge → Cloudflare에서 GitHub 가져오기다.
