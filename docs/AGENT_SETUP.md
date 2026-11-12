@@ -84,7 +84,9 @@
 ### D1 모드 (Cloudflare MCP)
 1. `node scripts/cf_mcp.mjs prepare --name <앱이름>` → `.wrangler/mcp/prepare.js`가 생긴다.
 2. 그 파일 내용을 그대로 Cloudflare MCP `execute`의 `code`로 넘긴다. D1을 찾거나 만들고(apac), `db/schema.sql`을 적용하고, `database_id`와 사이트 주소(`url`)를 돌려준다. 여러 번 실행해도 안전하다.
-   - `subdomain`이 `null`이면 처음 쓰는 계정이다. 사람에게 대시보드 › Workers 및 Pages를 한 번 열어 `workers.dev` 하위 도메인을 정해 달라고 한다.
+   - 처음 쓰는 계정이라 `workers.dev` 하위 도메인(주소의 `<앱이름>.<여기>.workers.dev` 부분)이 없으면 `prepare`가 **자동으로 만든다**. 후보는 GitHub 아이디, `아이디-apps`, `아이디-app`, 숫자를 붙인 이름 순이다. 결과에 `subdomain_created: true`가 있으면 만든 이름을 사용자에게 알린다.
+   - 이미 있으면 절대 바꾸지 않는다(바꾸면 기존 앱 주소가 전부 달라진다).
+   - 원하는 이름이 있으면 `prepare --subdomain <이름>`. 후보가 모두 사용 중이면 `subdomain: null`과 이유가 오니, 다른 이름으로 다시 실행한다.
 3. `node scripts/cf_mcp.mjs fill --name <앱이름> --database-id <위의 database_id>` → `wrangler.toml`이 채워진다. 커밋한다.
 - 표를 바꿨으면 1~2를 다시 한다(`CREATE TABLE IF NOT EXISTS`만 쓰므로 안전).
 
