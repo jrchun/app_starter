@@ -2,9 +2,11 @@
 // 이 스크립트는 Cloudflare에 직접 접속하지 않는다. MCP의 execute 도구에 넘길 코드를 파일로 만들어 줄 뿐이다.
 // AI는 만들어진 파일 내용을 그대로 execute의 code로 넘기고, 돌아온 결과를 읽는다.
 //
-//   node scripts/cf_mcp.mjs prepare --name <앱이름> [--subdomain <이름>]
-//                                                     D1 찾기·만들기(apac), db/schema.sql 적용, workers.dev 하위 도메인 확인
-//                                                     (계정에 하위 도메인이 없을 때만 GitHub 아이디 등으로 새로 만든다. 있으면 절대 바꾸지 않는다)
+//   node scripts/cf_mcp.mjs address --name <앱이름>   (읽기만) 사이트 주소가 어떻게 될지 확인 → 기획 요약에 넣어 확인받는다
+//                                                     계정 이름(workers.dev 하위 도메인)이 없으면 후보를 제안한다
+//   node scripts/cf_mcp.mjs prepare --name <앱이름> [--subdomain <확인받은 이름>]
+//                                                     D1 찾기·만들기(apac), db/schema.sql 적용, 사이트 주소 확인
+//                                                     (계정 이름이 없을 때만, 기획자가 확인한 --subdomain으로 만든다. 있으면 절대 바꾸지 않는다)
 //   node scripts/cf_mcp.mjs fill --name <앱이름> [--database-id <ID>]   wrangler.toml에 이름과 D1 ID를 채운다(파일만 고침)
 //   node scripts/cf_mcp.mjs deploy                    Worker 올리기(web/ 포함), 예약 작업 시각, workers.dev 켜기
 //   node scripts/cf_mcp.mjs status                    배포 시각, 예약 작업, Git 자동 배포(Workers Builds) 최근 결과
@@ -140,11 +142,12 @@ export function collectBundle(root = ROOT, config = readConfig(root)) {
 
 const j = v => JSON.stringify(v);
 
-// workers.dev 하위 도메인 후보. 계정당 하나이고 전 세계에서 겹치면 안 되므로 몇 개를 차례로 시도한다.
-export function subdomainCandidates(base, rand = () => String(Math.floor(100 + Math.random() * 900))) {
+// workers.dev 하위 도메인(계정 이름) 후보. 계정당 하나이고 전 세계에서 겹치면 안 된다.
+// 처음 쓰는 계정에서만 쓴다. 기획 요약에서 제안하고 기획자가 고른 것만 만든다.
+export function subdomainCandidates(base) {
   const clean = String(base || '').toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50);
   const b = clean || 'apps';
-  return [...new Set([b, `${b}-apps`, `${b}-app`, `${b}-${rand()}`, `${b}-${rand()}`])];
+  return [...new Set([b, `${b}-apps`, `${b}-app`])];
 }
 
 // 저장소 주인(GitHub 아이디)과 이름. git 원격 주소에서 읽는다.
@@ -156,11 +159,24 @@ export function repoFromGit(root = ROOT) {
   } catch { return null; }
 }
 
-export function renderPrepare({ name, schema, wantD1, subdomains = subdomainCandidates('') }) {
+// address: 읽기만 한다. 사이트 주소가 어떻게 될지 알려 준다(기획 요약에서 "이런 주소로 됩니다"에 쓴다).
+export function renderAddress({ name, proposals }) {
   return `async () => {
-// cf_mcp.mjs prepare: D1 찾기·만들기, 스키마 적용, workers.dev 하위 도메인 확인(없을 때만 새로 만듦)
+// cf_mcp.mjs address: 사이트 주소 확인(읽기만, 아무것도 만들지 않음)
+const NAME = ${j(name)}, PROPOSALS = ${j(proposals)};
+let sub = null;
+try { sub = (await cloudflare.request({ method: "GET", path: \`/accounts/\${accountId}/workers/subdomain\` })).result?.subdomain || null; } catch (e) { sub = null; }
+const workers = (await cloudflare.request({ method: "GET", path: \`/accounts/\${accountId}/workers/scripts\` })).result.map(w => w.id);
+if (sub) return { name: NAME, account_subdomain: sub, url: \`https://\${NAME}.\${sub}.workers.dev\`, name_taken_in_account: workers.includes(NAME), note: "계정 이름은 이미 정해져 있어 바꾸지 않는다. 앱 이름만 고를 수 있다." };
+return { name: NAME, account_subdomain: null, proposals: PROPOSALS.map(p => ({ subdomain: p, url: \`https://\${NAME}.\${p}.workers.dev\` })), note: "처음 쓰는 계정이다. 계정 이름은 한 번 정하면 바꿀 수 없고 모든 앱 주소에 들어간다. 기획자에게 골라 받은 뒤 prepare --subdomain으로 만든다. 다른 사람이 이미 쓰는 이름이면 만들 때 실패하니 그때 다시 묻는다." };
+}`;
+}
+
+export function renderPrepare({ name, schema, wantD1, confirmedSubdomain = null }) {
+  return `async () => {
+// cf_mcp.mjs prepare: D1 찾기·만들기, 스키마 적용, 사이트 주소 확인(계정 이름이 없으면 확인받은 이름으로만 만듦)
 const NAME = ${j(name)}, WANT_D1 = ${j(wantD1)};
-const SUBDOMAIN_CANDIDATES = ${j(subdomains)};
+const CONFIRMED_SUBDOMAIN = ${j(confirmedSubdomain)};
 const SCHEMA = ${j(schema)};
 const out = { account_id: accountId, name: NAME };
 if (WANT_D1) {
@@ -176,23 +192,22 @@ if (WANT_D1) {
 const subPath = \`/accounts/\${accountId}/workers/subdomain\`;
 let sub = null;
 try { sub = (await cloudflare.request({ method: "GET", path: subPath })).result?.subdomain || null; } catch (e) { sub = null; }
-if (!sub) {
-  // 처음 쓰는 계정: 하위 도메인이 없을 때만 만든다(있으면 기존 앱 주소가 바뀌므로 절대 바꾸지 않는다).
-  out.subdomain_tries = [];
-  for (const c of SUBDOMAIN_CANDIDATES) {
-    try {
-      sub = (await cloudflare.request({ method: "PUT", path: subPath, body: { subdomain: c } })).result?.subdomain || c;
-      out.subdomain_created = true;
-      break;
-    } catch (e) { out.subdomain_tries.push(c + ": " + String(e.message || e).slice(0, 120)); }
-  }
+if (!sub && CONFIRMED_SUBDOMAIN) {
+  // 처음 쓰는 계정: 기획자가 확인한 이름으로만 만든다. 이미 있으면 위에서 sub가 채워져 이 줄은 돌지 않는다(기존 주소 보호).
+  try {
+    sub = (await cloudflare.request({ method: "PUT", path: subPath, body: { subdomain: CONFIRMED_SUBDOMAIN } })).result?.subdomain || CONFIRMED_SUBDOMAIN;
+    out.subdomain_created = true;
+  } catch (e) { out.subdomain_error = String(e.message || e).slice(0, 200); }
 }
 if (sub) {
   out.subdomain = sub;
   out.url = \`https://\${NAME}.\${sub}.workers.dev\`;
+  if (CONFIRMED_SUBDOMAIN && sub !== CONFIRMED_SUBDOMAIN) out.subdomain_note = "계정 이름이 이미 " + sub + "(으)로 정해져 있어 그대로 쓴다.";
 } else {
   out.subdomain = null;
-  out.subdomain_note = "하위 도메인을 만들지 못했습니다(후보가 모두 사용 중이거나 권한 없음). prepare --subdomain <다른 이름>으로 다시 실행하세요.";
+  out.subdomain_note = CONFIRMED_SUBDOMAIN
+    ? "그 계정 이름은 만들 수 없었다(다른 사람이 쓰는 중일 수 있음). 기획자에게 다른 이름을 받아 --subdomain으로 다시 실행한다."
+    : "계정 이름(workers.dev 하위 도메인)이 아직 없다. address로 후보를 받아 기획자에게 확인한 뒤 --subdomain으로 다시 실행한다.";
 }
 return out;
 }`;
@@ -323,11 +338,13 @@ export function main(args = process.argv.slice(2)) {
     const name = arg(args, '--name') || config.name;
     if (!name || name === 'my-app' || !NAME_RE.test(name)) throw new Error('--name <앱이름>을 정해 주세요(영문 소문자·숫자·하이픈, 예: gym-log).');
     const schema = fs.readFileSync(path.join(ROOT, 'db/schema.sql'), 'utf8');
-    const preferred = arg(args, '--subdomain');
-    if (preferred && !NAME_RE.test(preferred)) throw new Error('--subdomain은 영문 소문자·숫자·하이픈만 쓸 수 있습니다.');
-    const owner = repoFromGit()?.owner;
-    const subdomains = [...new Set([...(preferred ? [preferred] : []), ...subdomainCandidates(owner)])];
-    writeOut(args, cmd, renderPrepare({ name, schema, wantD1: Boolean(config.d1), subdomains }));
+    const confirmed = arg(args, '--subdomain') || null;
+    if (confirmed && !NAME_RE.test(confirmed)) throw new Error('--subdomain은 영문 소문자·숫자·하이픈만 쓸 수 있습니다.');
+    writeOut(args, cmd, renderPrepare({ name, schema, wantD1: Boolean(config.d1), confirmedSubdomain: confirmed }));
+  } else if (cmd === 'address') {
+    const name = arg(args, '--name') || (config.name !== 'my-app' ? config.name : repoFromGit()?.repo?.toLowerCase());
+    if (!name || !NAME_RE.test(name)) throw new Error('--name <앱이름>을 정해 주세요(영문 소문자·숫자·하이픈).');
+    writeOut(args, cmd, renderAddress({ name, proposals: subdomainCandidates(repoFromGit()?.owner) }));
   } else if (cmd === 'fill') {
     const name = arg(args, '--name');
     if (!name || !NAME_RE.test(name)) throw new Error('--name <앱이름>이 필요합니다.');
@@ -353,7 +370,7 @@ export function main(args = process.argv.slice(2)) {
     if (config.d1 && (!config.d1.id || config.d1.id === PLACEHOLDER_ID)) throw new Error('wrangler.toml의 database_id가 비어 있습니다. prepare → fill을 먼저 하세요.');
     writeOut(args, cmd, renderDeploy(config, collectBundle(ROOT, config)));
   } else {
-    console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').filter(l => l.startsWith('//')).slice(0, 15).join('\n'));
+    console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').filter(l => l.startsWith('//')).slice(0, 18).join('\n'));
     process.exitCode = 2;
   }
 }
