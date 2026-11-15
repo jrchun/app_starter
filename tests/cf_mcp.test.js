@@ -144,6 +144,9 @@ test('connect: 저장소를 연결하고 첫 빌드를 시작한다(대시보드
   assert.equal(body.production_settings.deploy_command, 'npx wrangler deploy');
   assert.equal(body.production_settings.build_token_uuid, 'tok-1');
   assert.equal(body.previews_enabled, false);
+  // previews_base_config는 미리보기를 꺼도 API 필수 항목이다(빠지면 400)
+  assert.equal(body.previews_base_config.build_token_uuid, 'tok-1');
+  assert.equal(body.previews_base_config.deploy_command, 'npx wrangler preview');
 });
 
 test('connect: Worker가 없으면 자리 표시 Worker를 먼저 만든다', async () => {

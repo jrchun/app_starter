@@ -10,8 +10,8 @@
 **새 앱을 만들거나 배포하라는 요청이면 먼저 `docs/AGENT_SETUP.md`를 읽고 그 순서를 따른다.** (Codex 등은 `AGENTS.md`)
 Cloudflare·Supabase 연결은 MCP(브라우저 로그인)로 한다. **API 토큰을 만들게 하지 않는다.** 앱마다 사용자 계정의 GitHub 저장소가 있고, `main`에 올리면 Cloudflare가 자동 배포한다.
 
-허브 주소: (아직 없음)
-- 앱 허브(만든 앱들을 모아 보여 주는 페이지)의 주소. 이 줄 한 곳에만 둔다. 비어 있으면 허브 등록을 건너뛴다(`docs/AGENT_SETUP.md` 7절). 이 틀을 다른 사람이 복사해 쓰면 비워 두거나 자기 허브 주소로 바꾼다.
+허브 주소: https://hub.tedcheon.workers.dev
+- 앱 허브(만든 앱들을 모아 보여 주는 페이지)의 주소. 이 줄 한 곳에만 둔다. 비어 있으면(`(아직 없음)`) 허브 등록을 건너뛴다(`docs/AGENT_SETUP.md` 7절). 이 틀을 다른 사람이 복사해 쓰면 `(아직 없음)`으로 비우거나 자기 허브 주소로 바꾼다.
 
 ## 구성
 - `web/app.json`·`web/og.png`·`/api/health`의 `starter`·`usage`: 앱 허브가 읽는 자기소개서·대표 화면·상태. 자세한 것은 `docs/HUB.md`.
