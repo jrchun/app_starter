@@ -4,7 +4,6 @@
 사용자가 "백로그 진행"이라고 하면 위에서부터 하나씩 꺼내 PR로 처리하고, 끝나면 여기서 지운다.
 
 ## 확인이 남은 것 (다음 새 앱을 만들 때 같이)
-- **`cf_mcp.mjs connect`를 새 저장소에서 처음부터 끝까지 실행해 보기.** 지금까지는 이미 연결된 앱(asset)과 가짜 Cloudflare 테스트로만 확인했다.
 - **`gh repo create --template`으로 템플릿 저장소 만들기 확인.** 사람이 GitHub "Use this template"을 누르는 대신 AI가 만들 수 있는지.
 - **Codex에서 Cloudflare MCP 연결 확인.** `AGENTS.md` 안내대로 되는지.
 

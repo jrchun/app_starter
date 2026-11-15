@@ -200,4 +200,5 @@ Cloudflare 연결(6-2) 전에 화면을 먼저 띄워 보고 싶을 때, 또는 
   - 배포본의 예약 작업이 실제 시각(07:30 KST)에 돌아 `job_log`에 기록된 것을 `starter-test`에서 확인.
 - 편집 암호를 사이트에서 정하기(2026-11-12): `wrangler dev` 로컬에서 기기 A가 첫 저장 때 "편집 암호 정하기" → 저장됨, 기기 B(다크)는 "편집 암호" 입력 칸, 틀린 암호 거절, 맞는 암호 저장됨, 400px 가로 스크롤 없음.
 - `cf_mcp.mjs connect`(2026-11-12): 커넥터에 Workers CI 권한이 없는 상태에서 실행 → 첫 단계(권한)에서 아무것도 만들지 않고 `ok:false, step:"권한"`으로 멈춤을 확인. GitHub 번호는 `gh api ... search/repositories`로 얻어짐.
-- 아직 확인하지 못한 것: Workers CI 권한이 있을 때 `connect`가 끝까지 되는지(연결·첫 빌드), `gh repo create --template`, Codex에서 MCP 연결.
+- 앱 허브(`jrchun/hub` → Worker `hub`, 2026-11-15): Workers CI 권한이 있는 커넥터로 `connect`를 실행 → 처음엔 `POST /builds/workers`가 400 "Invalid request body". 공식 API 명세에서 `previews_base_config`가 미리보기를 꺼도 필수임을 확인하고 넣은 뒤 연결·첫 빌드 성공(사람 단계 없음). 허브 주소를 `CLAUDE.md`에 채웠다.
+- 아직 확인하지 못한 것: `gh repo create --template`, Codex에서 MCP 연결.

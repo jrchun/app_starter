@@ -103,6 +103,8 @@ export async function connect(P, cloudflare, accountId) {
           git_repository: { provider_type: 'github', provider_account_id: P.ownerId, provider_account_name: P.owner, repo_id: P.repoId, repo_name: P.repo, branch: 'main' },
           production_settings: { build_command: '', deploy_command: 'npx wrangler deploy', build_token_uuid: tokens[0].build_token_uuid, root_directory: '/', path_includes: ['*'], path_excludes: [], build_caching_enabled: true },
           previews_enabled: false,
+          // 미리보기를 끄더라도 이 설정은 API 필수 항목이다(없으면 400 "Invalid request body", 2026-11-15 확인).
+          previews_base_config: { build_command: '', deploy_command: 'npx wrangler preview', build_token_uuid: tokens[0].build_token_uuid, root_directory: '/', path_includes: ['*'], path_excludes: [], build_caching_enabled: true },
         },
       });
     } catch (e) {
