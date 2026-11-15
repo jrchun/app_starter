@@ -30,6 +30,7 @@ Cloudflare·Supabase 연결은 MCP(브라우저 로그인)로 한다. **API 토�
 1. 고친 뒤 `npm test`(node + python 테스트)와 로컬 실행(`npx wrangler@4 dev`, 편집 암호는 `.dev.vars`)으로 확인한다.
 2. 고친 것은 PR로 올리고, `npm test` 통과와 화면 확인이 끝나면 **AI가 직접 Merge한다**(사용자가 미리 허락함. 사용자가 "합치기 전에 보여 줘"라고 했거나 데이터를 지우는 변경이면 기다린다). `main`에 들어가면 Cloudflare(Workers Builds)가 자동 배포한다. 앱의 첫 연결은 AI가 `cf_mcp.mjs connect`로 하고, 안 되면 사람이 Cloudflare "만들기 › GitHub"를 한다. 배포 뒤 **반드시** `node scripts/check_site.mjs <사이트 주소>`로 실제 사이트를 확인하고, 화면은 브라우저로 폰 폭에서 본다. "배포했습니다"로 끝내지 않는다.
 3. 사람에게 맡겨야 하는 일(AI가 못 한 Cloudflare 연결, 사이트에서 편집 암호 정하기, Supabase 설정 클릭)은 `docs/AGENT_SETUP.md`·`docs/SETUP.md`의 해당 줄과 함정을 그대로 안내한다. 그 밖의 일로 사람을 부르지 않는다.
+4. 미뤄 둔 일은 `docs/BACKLOG.md`에 적는다(기능 완성도가 디자인보다 먼저). 사용자가 "백로그 진행"이라고 하면 거기서 꺼내 처리한다.
 
 ## 실행
 - 로컬: `cp .dev.vars.example .dev.vars && npx wrangler@4 d1 execute <이름> --local --file db/schema.sql && npx wrangler@4 dev` (예약 작업 시험: `--test-scheduled` 후 `/__scheduled`)
