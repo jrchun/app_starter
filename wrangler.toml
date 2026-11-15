@@ -1,6 +1,7 @@
 # Cloudflare Worker 설정(이 파일이 기준이다). name은 대시보드의 Worker 이름과 같아야 한다.
 # name, database_name, database_id는 scripts/cf_mcp.mjs fill(또는 wrangler d1 create 출력)로 채운다.
-# 편집 암호(WRITE_TOKEN)는 비밀값이라 여기 두지 않는다: 대시보드 > Worker > 설정 > 변수 및 비밀 > Secret.
+# 편집 암호는 여기 두지 않는다. 사이트에서 처음 저장할 때 화면에서 정한다(D1에 해시로 저장).
+# 대시보드 › Worker › 설정 › 변수 및 비밀 › Secret WRITE_TOKEN을 넣으면 그것이 우선한다.
 name = "my-app"
 main = "./src/worker.js"
 compatibility_date = "2026-11-01"

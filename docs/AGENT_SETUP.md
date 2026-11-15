@@ -123,6 +123,7 @@
 1. GitHub 번호 얻기: `gh api -X GET search/repositories -f q='repo:<소유자>/<저장소>' --jq '.items[0] | {repo_id: .id, owner_id: .owner.id}'`
 2. `node scripts/cf_mcp.mjs connect --github-account-id <owner_id> --github-repo-id <repo_id>` → `.wrangler/mcp/connect.js` 내용을 그대로 `execute`의 `code`로 넘긴다.
    - Worker가 없으면 "배포 준비 중" 자리 표시 Worker를 만들고, 저장소를 연결하고, 첫 빌드를 시작한다.
+   - 다시 실행해도 안전하다. 이미 연결돼 있으면(`already_connected: true`) 연결은 건너뛰고 빌드만 다시 시작한다.
 3. 결과가 `ok: true`면 1~2분 뒤 `cf_mcp.mjs status`로 `git_build`가 성공인지 보고 7절대로 검사한다.
 4. `ok: false`면 `step`과 `note`를 보고 아래 사람 경로로 넘어간다.
    - `권한`: 커넥터에 Workers CI 권한이 없다. 사람에게 커넥터를 다시 연결하며 허용해 달라고 하거나, 이번엔 사람 경로로 한다.
@@ -143,7 +144,7 @@
 - 대시보드 › Worker › 설정 › 변수 및 비밀 › Secret `WRITE_TOKEN`을 넣으면 그것이 우선한다(예전 방식, 여전히 된다).
 
 ### 6-4. (예비) MCP 첫 배포
-사람이 7번을 하기 전에 화면을 먼저 띄워 보고 싶을 때, 또는 Git 배포가 깨졌을 때만 쓴다.
+Cloudflare 연결(6-2) 전에 화면을 먼저 띄워 보고 싶을 때, 또는 Git 배포가 깨졌을 때만 쓴다.
 1. `node scripts/cf_mcp.mjs deploy` → `.wrangler/mcp/deploy.js` 내용을 그대로(다시 타이핑하지 말고 파일을 읽어서) `execute`의 `code`로 넘긴다. Worker 올리기, 예약 작업 시각 등록, `workers.dev` 켜기를 하고 `url`을 돌려준다.
    - MCP로는 정적 자산 업로드를 할 수 없어서(아래 시험 기록) `web/`을 Worker 안에 묶어 올린다. 화면과 동작은 같다. Git 배포가 한 번 돌면 원래 구성(정적 자산)으로 바뀐다.
    - 스크립트가 "너무 큽니다"라고 하면(100KB 넘음. 큰 데이터 파일이 있거나 Supabase 모드면 넘는다) 쓰지 않는다.

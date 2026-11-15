@@ -11,7 +11,8 @@ export const json = (body, status = 200) => new Response(JSON.stringify(body), {
 //   2) 사이트에서 처음 한 번 정한 암호(D1 settings 표에 소금 + SHA-256 해시로 저장, 원문은 저장하지 않음).
 // 둘 다 없으면 쓰기를 모두 막는다(사이트가 "편집 암호 정하기"를 보여 준다).
 const PASSWORD_KEY = 'write_hash';
-export const MIN_PASSWORD = 6;
+export const MIN_PASSWORD = 6;   // 화면은 /api/health의 passwordMinLength로 이 값을 받아 쓴다
+export const MAX_PASSWORD = 200;
 
 const bearer = request => (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
 

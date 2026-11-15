@@ -3,29 +3,31 @@
 import { createDocSync } from './docsync.js';
 
 const $ = id => document.getElementById(id);
+const FIELDS = ['title', 'memo'];
+const showCount = memo => { $('count').textContent = (memo || '').length.toLocaleString('ko-KR') + '자'; };
 
 const sync = createDocSync({
   render(doc, { force } = {}) {
     // 입력 중인 칸은 덮어쓰지 않는다(충돌로 문서를 통째로 바꿀 때는 예외).
-    for (const k of ['title', 'memo']) {
+    for (const k of FIELDS) {
       if (force || document.activeElement !== $(k)) $(k).value = doc[k] ?? '';
     }
-    $('count').textContent = (doc.memo || '').length.toLocaleString('ko-KR') + '자';
+    showCount(doc.memo);
   },
   status(text) { $('saveState').textContent = text; },
-  needToken({ firstTime } = {}) {
+  needToken({ firstTime, minLength } = {}) {
     // 처음이면 "정하기", 아니면 "입력". 정한 암호는 이 기기에 기억된다.
     $('tokenLabel').textContent = firstTime ? '편집 암호 정하기' : '편집 암호';
     $('tokenIn').autocomplete = firstTime ? 'new-password' : 'current-password';
-    $('tokenIn').minLength = firstTime ? 6 : 0;
+    $('tokenIn').minLength = firstTime ? minLength : 0;
     $('tokenForm').hidden = false; $('tokenIn').focus();
   },
 });
 
-for (const k of ['title', 'memo']) {
+for (const k of FIELDS) {
   $(k).addEventListener('input', e => {
     sync.edit(doc => { doc[k] = e.target.value; });
-    $('count').textContent = ($('memo').value || '').length.toLocaleString('ko-KR') + '자';
+    showCount($('memo').value);
   });
 }
 

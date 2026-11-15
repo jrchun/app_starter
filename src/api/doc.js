@@ -3,7 +3,7 @@
 import { json, canWrite, logUsage, nowIso } from '../lib/http.js';
 
 export const EMPTY = {};
-const MAX_BYTES = 256 * 1024;
+const MAX_BYTES = 256 * 1024; // 문서 하나의 최대 크기(바이트). 한글은 글자당 3바이트다
 
 async function current(env) {
   const row = await env.DB.prepare('SELECT body, version FROM doc WHERE id = 1').first();
@@ -19,7 +19,7 @@ export async function GET({ request, env }) {
 export async function PUT({ request, env }) {
   if (!(await canWrite(request, env))) return json({ detail: '편집 암호가 필요합니다.' }, 401);
   const text = await request.text();
-  if (text.length > MAX_BYTES) return json({ detail: '문서가 너무 큽니다.' }, 413);
+  if (new TextEncoder().encode(text).length > MAX_BYTES) return json({ detail: '문서가 너무 큽니다.' }, 413);
   let body;
   try { body = JSON.parse(text); } catch { return json({ detail: 'JSON이 아닙니다.' }, 400); }
   const { doc, version } = body || {};

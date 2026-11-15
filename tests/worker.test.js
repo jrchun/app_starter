@@ -36,7 +36,7 @@ test('정적 파일은 ASSETS로, /api/health는 D1과 편집 암호 상태', as
   const { env } = fakeEnv();
   assert.equal(await (await worker.fetch(req('/'), env)).text(), 'asset');
   const h = await worker.fetch(req('/api/health'), env);
-  assert.deepEqual(await h.json(), { ok: true, db: true, passwordSet: true, passwordSource: 'secret', writeTokenSet: true });
+  assert.deepEqual(await h.json(), { ok: true, db: true, passwordSet: true, passwordSource: 'secret', passwordMinLength: 6, writeTokenSet: true });
 });
 
 test('편집 암호(대시보드 Secret): 없거나 틀리면 401, 맞으면 저장', async () => {
@@ -54,6 +54,7 @@ test('편집 암호를 사이트에서 처음 정하기: 한 번만 되고, 정�
   assert.equal((await put(env, 'anything')).status, 401);
   assert.equal((await (await worker.fetch(req('/api/health'), env)).json()).passwordSet, false);
   assert.equal((await claim(env, '123')).status, 422);           // 너무 짧음
+  assert.equal((await claim(env, 'x'.repeat(201))).status, 422); // 너무 김
   assert.equal((await claim(env, 'my-pass-1')).status, 201);
   assert.ok(!store.write_hash.includes('my-pass-1'));             // 원문은 저장하지 않는다
   assert.equal((await claim(env, 'other-pass')).status, 409);    // 두 번째는 거절
@@ -96,4 +97,22 @@ test('허용하지 않는 요청 방식은 405, Supabase 모드(D1 없음)에서
   assert.equal((await worker.fetch(req('/api/doc', { method: 'DELETE' }), env)).status, 405);
   const noDb = { ASSETS: { fetch: async () => new Response('asset', { status: 404 }) } };
   assert.equal((await claim(noDb, 'my-pass-1')).status, 404);
+});
+
+test('문서 크기는 바이트로 잰다(한글은 글자당 3바이트)', async () => {
+  const { env } = fakeEnv({ row: { body: '{}', version: 1 } });
+  const big = '가'.repeat(90 * 1024); // 글자 수는 한도(256K)보다 작지만 바이트는 넘는다
+  const r = await worker.fetch(req('/api/doc', { method: 'PUT', headers: { Authorization: 'Bearer secret' }, body: JSON.stringify({ doc: { big }, version: 1 }) }), env);
+  assert.equal(r.status, 413);
+});
+
+test('서버 오류는 안내 문구만 보여 주고 내부 내용은 감춘다', async () => {
+  const env = { WRITE_TOKEN: 'secret', DB: { prepare: () => { throw new Error('비밀 내부 정보'); } }, ASSETS: { fetch: async () => new Response('') } };
+  const errs = []; const orig = console.error; console.error = (...a) => errs.push(a);
+  try {
+    const r = await worker.fetch(req('/api/doc'), env);
+    assert.equal(r.status, 500);
+    assert.doesNotMatch(await r.text(), /비밀 내부 정보/);
+    assert.ok(errs.length > 0); // 내용은 로그에 남는다
+  } finally { console.error = orig; }
 });
