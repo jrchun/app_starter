@@ -23,6 +23,9 @@ Cloudflare 준비·연결은 `node scripts/cf_mcp.mjs prepare|fill|connect`가 �
 고친 것은 PR로 올리고 `npm test`가 통과하면 AI가 직접 Merge한다(사용자가 미리 허락함, `docs/AGENT_SETUP.md` 6-1).
 비밀번호(편집 암호)는 채팅으로 받지 않는다.
 
+## 앱 허브
+앱 정보는 `web/app.json`, 대표 화면은 `web/og.png`(`scripts/og_shot.mjs`), 허브 주소는 `CLAUDE.md`의 "허브 주소" 줄. 이미 만든 앱을 허브에 붙이는 순서는 `docs/HUB.md`.
+
 ## 나중에 할 일
 미뤄 둔 일은 `docs/BACKLOG.md`에 있다(기능 완성도가 디자인보다 먼저).
 

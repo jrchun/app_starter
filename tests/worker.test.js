@@ -5,7 +5,8 @@ import worker from '../src/worker.js';
 import { canWrite, hashPassword, verifyPassword } from '../src/lib/http.js';
 
 // 이 앱이 쓰는 SQL만 흉내 내는 가짜 D1. settings(편집 암호)는 실제처럼 기억한다.
-function fakeEnv({ token = 'secret', row = null, changes = 1, settings = {} } = {}) {
+// usage: usage_log 행 목록(ts 문자열). null이면 그 표 질의가 실패하는 것으로 흉내 낸다.
+function fakeEnv({ token = 'secret', row = null, changes = 1, settings = {}, usage = [] } = {}) {
   const log = [], store = { ...settings };
   const run = (sql, args) => {
     log.push([sql, args]);
@@ -18,6 +19,10 @@ function fakeEnv({ token = 'secret', row = null, changes = 1, settings = {} } = 
   const first = (sql, args) => {
     if (sql.includes('SELECT 1')) return { one: 1 };
     if (sql.includes('FROM settings')) return store[args[0]] ? { value: store[args[0]] } : null;
+    if (sql.includes('FROM usage_log')) {
+      if (!usage) throw new Error('no such table: usage_log');
+      return { n: usage.filter(ts => ts >= args[0]).length, last: usage.length ? [...usage].sort().at(-1) : null };
+    }
     return row;
   };
   const prepare = sql => ({
@@ -36,7 +41,37 @@ test('정적 파일은 ASSETS로, /api/health는 D1과 편집 암호 상태', as
   const { env } = fakeEnv();
   assert.equal(await (await worker.fetch(req('/'), env)).text(), 'asset');
   const h = await worker.fetch(req('/api/health'), env);
-  assert.deepEqual(await h.json(), { ok: true, db: true, passwordSet: true, passwordSource: 'secret', passwordMinLength: 6, writeTokenSet: true });
+  assert.deepEqual(await h.json(), {
+    ok: true, db: true, passwordSet: true, passwordSource: 'secret', passwordMinLength: 6, writeTokenSet: true,
+    starter: 1, usage: { last30d: 0, lastUsedAt: null },
+  });
+});
+
+test('/api/health 사용량(허브용): 최근 30일 건수와 마지막 기록 시각', async () => {
+  const day = 86400000, iso = ms => new Date(ms).toISOString().replace(/\.\d+Z$/, 'Z');
+  const now = Date.now();
+  const usage = [iso(now - 40 * day), iso(now - 10 * day), iso(now - 2 * day), iso(now - 60000)];
+  const { env } = fakeEnv({ usage });
+  const j = await (await worker.fetch(req('/api/health'), env)).json();
+  assert.deepEqual(j.usage, { last30d: 3, lastUsedAt: usage[3] });
+  // 예전 필드는 그대로(예전 check_site.mjs·화면이 읽는다)
+  for (const k of ['ok', 'db', 'passwordSet', 'passwordSource', 'passwordMinLength', 'writeTokenSet']) assert.ok(k in j, k);
+  assert.equal(j.starter, 1);
+});
+
+test('/api/health: 사용량 질의가 실패해도 health는 200, usage는 null', async () => {
+  const { env } = fakeEnv({ usage: null });
+  const h = await worker.fetch(req('/api/health'), env);
+  assert.equal(h.status, 200);
+  const j = await h.json();
+  assert.equal(j.db, true);
+  assert.equal(j.usage, null);
+});
+
+test('/api/health Supabase 모드(D1 없음): starter는 있고 usage는 null', async () => {
+  const h = await worker.fetch(req('/api/health'), { ASSETS: { fetch: async () => new Response('') } });
+  assert.equal(h.status, 200);
+  assert.deepEqual(await h.json(), { ok: true, db: null, mode: 'supabase', starter: 1, usage: null });
 });
 
 test('편집 암호(대시보드 Secret): 없거나 틀리면 401, 맞으면 저장', async () => {
