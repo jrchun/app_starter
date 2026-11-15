@@ -59,7 +59,7 @@ $('addForm').addEventListener('submit', async e => {
 });
 
 $('list').addEventListener('click', async e => {
-  const id = e.target.dataset.id; if (!id) return;
+  const id = e.target.closest('[data-id]')?.dataset.id; if (!id) return;
   status('지우는 중…');
   const { error } = await sb.from('notes').delete().eq('id', id);
   if (error) { status(friendly(error)); return; }
