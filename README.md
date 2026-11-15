@@ -138,6 +138,7 @@ AI가 [`docs/AGENT_SETUP.md`](docs/AGENT_SETUP.md)를 읽고 저장소 만들기
 - **비용**: 작은 개인 앱이면 Cloudflare와 GitHub 무료 범위 안에서 충분합니다.
 - **데이터는 공개입니다**: 사이트 주소를 아는 사람은 내용을 볼 수 있습니다. 남에게 보이면 안 되는 정보(주민번호, 계좌 비밀번호 등)는 넣지 마세요.
 - **백업**: Claude에게 "데이터 백업해 줘"라고 하면 데이터베이스를 파일로 내려받는 방법을 안내합니다.
+- **앱 허브**: 만든 앱들을 한 페이지에 모아 보여 주는 허브에 붙을 수 있게 앱마다 자기소개서(`web/app.json`)와 대표 화면(`web/og.png`)이 있습니다. 이미 만든 앱은 그 앱 세션에서 "허브 연결해 줘"라고 하면 됩니다. → [docs/HUB.md](docs/HUB.md)
 - **틀이 좋아지면**: 이 저장소가 바뀌어도 이미 만든 내 앱에는 자동으로 반영되지 않습니다. 필요한 부분만 Claude에게 옮겨 달라고 하세요.
 
 ---
@@ -151,6 +152,7 @@ AI가 [`docs/AGENT_SETUP.md`](docs/AGENT_SETUP.md)를 읽고 저장소 만들기
 | 저장 | Cloudflare D1 (SQLite) | `db/schema.sql` |
 | 매일 작업 | Cloudflare Cron Trigger | `src/jobs.js`, `wrangler.toml` `[triggers]` |
 | 배포 | Cloudflare MCP(첫 배포), Workers Builds(이후 `main` 푸시마다) | `scripts/cf_mcp.mjs` |
+| 앱 허브 연동 | 자기소개서·대표 화면·상태 | `web/app.json`, `web/og.png`, `/api/health`, [`docs/HUB.md`](docs/HUB.md) |
 
 - 문서 하나를 저장하는 API(`/api/doc`): 버전 관리, 다른 기기 동시 수정 시 409, 편집 암호 없으면 401
 - 화면 동기화 모듈(`web/js/docsync.js`): 0.7초 뒤 자동 저장, 충돌 시 최신으로 교체, 화면 안 편집 암호 입력칸

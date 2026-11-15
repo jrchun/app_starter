@@ -33,6 +33,14 @@ class UseSupabaseTests(unittest.TestCase):
         self.assertEqual(open(os.path.join(dst, "wrangler.toml"), encoding="utf-8").read().count("[vars]"), 1)
         self.assertFalse(os.path.exists(os.path.join(dst, "web/js/docsync.js")))
         self.assertTrue(os.path.exists(os.path.join(dst, "web/vendor-supabase.js")))
+        # 앱 허브용 자기소개서: mode만 supabase로 바뀌고 나머지는 그대로
+        import json
+        meta = json.load(open(os.path.join(dst, "web/app.json"), encoding="utf-8"))
+        self.assertEqual(meta["mode"], "supabase")
+        self.assertEqual(meta["schema"], 1)
+        # 대표 화면 미리보기 태그가 Supabase 예제 화면에도 있다
+        html = open(os.path.join(dst, "web/index.html"), encoding="utf-8").read()
+        self.assertIn('property="og:image" content="/og.png"', html)
 
     def test_refuses_secret_key(self):
         _, p = self.run_script("--url", "https://abcdefghijklmnopqrst.supabase.co", "--key", "sb_secret_nope")

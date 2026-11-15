@@ -10,7 +10,11 @@
 **새 앱을 만들거나 배포하라는 요청이면 먼저 `docs/AGENT_SETUP.md`를 읽고 그 순서를 따른다.** (Codex 등은 `AGENTS.md`)
 Cloudflare·Supabase 연결은 MCP(브라우저 로그인)로 한다. **API 토큰을 만들게 하지 않는다.** 앱마다 사용자 계정의 GitHub 저장소가 있고, `main`에 올리면 Cloudflare가 자동 배포한다.
 
+허브 주소: (아직 없음)
+- 앱 허브(만든 앱들을 모아 보여 주는 페이지)의 주소. 이 줄 한 곳에만 둔다. 비어 있으면 허브 등록을 건너뛴다(`docs/AGENT_SETUP.md` 7절). 이 틀을 다른 사람이 복사해 쓰면 비워 두거나 자기 허브 주소로 바꾼다.
+
 ## 구성
+- `web/app.json`·`web/og.png`·`/api/health`의 `starter`·`usage`: 앱 허브가 읽는 자기소개서·대표 화면·상태. 자세한 것은 `docs/HUB.md`.
 - `web/`: 정적 화면(빌드 없음). Worker 정적 자산으로 그대로 배포된다. `web/js/docsync.js`가 불러오기·자동 저장·충돌(409)·편집 암호(401)를 맡는다. 앱 화면은 `web/js/app.js`.
 - `src/worker.js`: `/api/*`만 처리. 새 API는 `src/api/<이름>.js`에 `GET/PUT/POST/DELETE`를 만들고 `ROUTES`에 추가.
 - `src/jobs.js`: 예약 작업(매일 등). `wrangler.toml`의 `[triggers] crons`(UTC) 시각에 Worker 안에서 돈다. 토큰·GitHub Actions 없음. 무료 플랜은 계정 전체 Cron 5개.
@@ -25,6 +29,7 @@ Cloudflare·Supabase 연결은 MCP(브라우저 로그인)로 한다. **API 토�
 - 읽기는 누구나, 쓰기는 편집 암호가 있어야 한다. 편집 암호는 사람이 사이트에서 처음 저장할 때 화면에서 정한다(D1 `settings`에 해시로 저장, `src/api/password.js`). 대시보드 Secret `WRITE_TOKEN`이 있으면 그것이 우선. 암호 원문을 채팅·저장소에 두지 않는다.
 - 모르는 외부 API 사양은 추측하지 말고 공식 문서를 확인한다(Cloudflare 문서는 `https://developers.cloudflare.com/<경로>/index.md`로 마크다운을 받을 수 있다).
 - 계산·규칙은 DOM에 접근하지 않는 순수 함수로 두고 `tests/`에 테스트를 붙인다.
+- 큰 기능을 바꾸면 `web/app.json`의 `updatedAt`을 그날 날짜로 고친다(화면이 크게 바뀌면 `og.png`도 다시 찍는다). `app.json`은 누구나 볼 수 있고, `public: false`는 허브에서 링크만 숨기는 표시일 뿐 보안 장치가 아니다.
 
 ## 작업 흐름
 1. 고친 뒤 `npm test`(node + python 테스트)와 로컬 실행(`npx wrangler@4 dev`, 편집 암호는 `.dev.vars`)으로 확인한다.
