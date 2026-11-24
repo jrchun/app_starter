@@ -57,7 +57,11 @@ def main(argv=None) -> int:
     wr = ROOT / "wrangler.toml"
     t = wr.read_text(encoding="utf-8")
     t = re.sub(r"\n\[\[d1_databases\]\]\n(?:[^\n]+\n)*", "\n", t)
-    t = re.sub(r"\n# Supabase 연결\(공개 값\).*", "", t, flags=re.S).rstrip() + "\n"
+    # 예전 Supabase 칸만 지운다(그 뒤의 내 도메인 주소 칸 등은 남긴다).
+    t = re.sub(r"\n*# Supabase 연결\(공개 값\)[^\n]*\n\[vars\]\nSUPABASE_URL = [^\n]*\nSUPABASE_KEY = [^\n]*\n?", "\n", t)
+    # Supabase 모드는 사람마다 로그인하므로 허브 로그인(HUB_URL, D1 모드 전용)을 뺀다.
+    t = re.sub(r"^HUB_URL\s*=.*\n?", "", t, flags=re.M)
+    t = re.sub(r"\n*# 허브 로그인 주소[^\n]*\n\[vars\]\n(?=\n|$)", "\n", t).rstrip() + "\n"
     t += f'\n# Supabase 연결(공개 값). 매일 잠들기 방지 예약 작업(src/jobs.js)이 쓴다.\n[vars]\nSUPABASE_URL = "{url}"\nSUPABASE_KEY = "{key}"\n'
     wr.write_text(t, encoding="utf-8")
 

@@ -29,7 +29,7 @@ Cloudflare·Supabase 연결은 MCP(브라우저 로그인)로 한다. **API 토�
 ## 지켜야 할 것
 - 화면은 빌드 없는 정적 파일. React·번들러·CSS 프레임워크를 들이지 않는다. 외부 스크립트는 글꼴(Google Fonts)만.
 - 색은 `web/styles.css`의 CSS 변수만 쓴다. **라이트·다크와 폰 폭 400px을 매번 확인**한다(가로 스크롤 없음).
-- 읽기는 누구나, 쓰기는 편집 암호가 있어야 한다. 편집 암호는 사람이 사이트에서 처음 저장할 때 화면에서 정한다(D1 `settings`에 해시로 저장, `src/api/password.js`). 대시보드 Secret `WRITE_TOKEN`이 있으면 그것이 우선. 암호 원문을 채팅·저장소에 두지 않는다.
+- 읽기는 누구나, 쓰기는 편집 권한이 있어야 한다. **허브 로그인**(D1 모드 + 내 도메인 + 같은 도메인의 허브, `wrangler.toml` `HUB_URL`): 허브에서 한 번 로그인하면 내 앱 전부 편집(`docs/HUB.md` "허브 로그인"). 그 밖의 앱은 사람이 사이트에서 처음 저장할 때 편집 암호를 화면에서 정한다(D1 `settings`에 해시로 저장, `src/api/password.js`). 대시보드 Secret `WRITE_TOKEN`은 어느 경우든 통한다(비상용). 암호 원문을 채팅·저장소에 두지 않는다.
 - 모르는 외부 API 사양은 추측하지 말고 공식 문서를 확인한다(Cloudflare 문서는 `https://developers.cloudflare.com/<경로>/index.md`로 마크다운을 받을 수 있다).
 - 계산·규칙은 DOM에 접근하지 않는 순수 함수로 두고 `tests/`에 테스트를 붙인다.
 - 큰 기능을 바꾸면 `web/app.json`의 `updatedAt`을 그날 날짜로 고친다(화면이 크게 바뀌면 `og.png`도 다시 찍는다). `app.json`은 누구나 볼 수 있고, `public: false`는 허브에서 링크만 숨기는 표시일 뿐 보안 장치가 아니다.

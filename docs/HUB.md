@@ -53,3 +53,15 @@
 3. **대표 화면.** app_starter의 `scripts/og_shot.mjs`를 복사해 `node scripts/og_shot.mjs <사이트 주소>`로 `web/og.png`를 찍는다. `web/index.html`의 `<title>` 아래에 `og:title`·`og:description`·`og:image`(`/og.png`) 태그를 넣는다. `scripts/check_site.mjs`도 app_starter 것으로 바꾼다(허브 항목을 경고로 검사한다).
 4. **테스트 → PR → Merge → 확인.** `npm test`, 자동 배포 뒤 `node scripts/check_site.mjs <사이트 주소>`에서 "앱 허브" 세 줄이 `ok`인지 본다.
 5. **허브 등록.** 허브 주소가 있으면 `POST <허브 주소>/api/register`에 `{"url": "<앱 주소>"}` (`docs/AGENT_SETUP.md` 7절 7번과 같다). 없거나 실패하면 "허브 등록은 건너뜀"이라고만 보고한다.
+
+## 허브 로그인 (한 번 로그인하면 내 앱 전부 편집)
+
+허브에서 편집 암호로 로그인하면 브라우저에 로그인 표시(쿠키 `hub_session`)가 **내 도메인 전체**(예: `woongstudio.com`)에 생긴다.
+같은 도메인 아래 앱(`gym-log.woongstudio.com` 등)은 저장 요청에 붙어 온 그 표시를 허브 `/api/session`에 물어 진짜면 저장을 허락한다.
+
+- **켜지는 조건**: D1 모드 + `CLAUDE.md`에 내 도메인 + 허브 주소도 그 도메인 아래. 이때 `cf_mcp.mjs fill`이 `wrangler.toml` `[vars]`에 `HUB_URL`을 넣는다(`--no-hub`면 안 넣음). Supabase 모드는 사람마다 로그인하므로 해당 없음.
+- **앱 쪽**: `src/lib/http.js` `canWrite` = 대시보드 Secret `WRITE_TOKEN`(비상용, 언제나 통함) 또는 허브 로그인. 허브 로그인이 켜지면 사이트에서 정하는 앱별 암호는 쓰지 않는다. `/api/health`가 `auth: "hub"`, `hubLogin`(허브 로그인 주소)을 알려 주고, 화면(`docsync.js`)은 401이면 "허브에서 로그인 →" 링크(`?login=1&return=<지금 주소>`)를 보여 준다.
+- **허브 쪽**(`jrchun/hub`): `/api/login`(암호 → 쿠키, 같은 위치에서 10분에 10번 틀리면 잠시 막음), `/api/logout`(`all: true`면 모든 기기), `/api/session`(앱이 확인). 로그인 표시는 90일 유지. 허브 편집 암호를 바꾸거나 초기화하면 모든 로그인 표시가 무효가 된다.
+- 앱은 확인 결과를 최대 5분 기억한다. 그래서 허브에서 로그아웃해도 앱에는 최대 5분 뒤 반영된다.
+- **허브가 멈추면 저장이 안 된다**(읽기는 된다). 급하면 그 앱의 대시보드 › Worker › 설정 › 변수 및 비밀에 Secret `WRITE_TOKEN`을 넣고 그 값으로 저장한다.
+- 로컬에서 허브와 함께 시험: 허브를 `npx wrangler@4 dev --port 8787 --local-upstream localhost:8787`(routes 때문에 주소가 바뀌지 않게), 앱은 `.dev.vars`에 `HUB_URL=http://localhost:8787`을 넣고 `--port 8788`. localhost끼리는 쿠키를 같이 쓴다.
