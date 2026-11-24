@@ -43,7 +43,7 @@ test('정적 파일은 ASSETS로, /api/health는 D1과 편집 암호 상태', as
   const h = await worker.fetch(req('/api/health'), env);
   assert.deepEqual(await h.json(), {
     ok: true, db: true, passwordSet: true, passwordSource: 'secret', passwordMinLength: 6, writeTokenSet: true,
-    starter: 1, usage: { last30d: 0, lastUsedAt: null },
+    starter: 1, usage: { last30d: 0, lastUsedAt: null }, auth: 'password',
   });
 });
 

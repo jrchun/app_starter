@@ -1,7 +1,7 @@
 // GET /api/health → {ok, db, passwordSet, ..., starter, usage}
 // 배포 확인(scripts/check_site.mjs), 화면(편집 암호를 "정하기"로 보여 줄지), 앱 허브(docs/HUB.md)가 쓴다.
 // 필드는 지우거나 이름을 바꾸지 않는다(예전 check_site.mjs·허브가 읽는다). 새 값은 추가만 한다.
-import { json, passwordState, MIN_PASSWORD } from '../lib/http.js';
+import { json, passwordState, hubUrl, MIN_PASSWORD } from '../lib/http.js';
 
 // 허브 연동 기능의 버전. 허브는 이 값이 없으면 "아직 허브 준비 안 된 예전 앱"으로 본다.
 export const STARTER_VERSION = 1;
@@ -32,5 +32,7 @@ export async function GET({ env }) {
   return json({
     ok: true, db, passwordSet: pw.set, passwordSource: pw.source, passwordMinLength: MIN_PASSWORD, writeTokenSet: pw.set,
     starter: STARTER_VERSION, usage,
+    // 허브 로그인을 쓰면 화면이 "허브에서 로그인 →" 링크를 보여 준다(docs/HUB.md).
+    ...(hubUrl(env) ? { auth: 'hub', hubLogin: hubUrl(env) + '/?login=1' } : { auth: 'password' }),
   }, db ? 200 : 503);
 }

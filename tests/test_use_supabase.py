@@ -42,6 +42,24 @@ class UseSupabaseTests(unittest.TestCase):
         html = open(os.path.join(dst, "web/index.html"), encoding="utf-8").read()
         self.assertIn('property="og:image" content="/og.png"', html)
 
+    def test_keeps_domain_and_drops_hub_login(self):
+        """fill이 넣은 내 도메인 주소 칸은 남기고, 허브 로그인(D1 모드 전용)은 뺀다. 두 번 실행해도 [vars]는 하나."""
+        import subprocess, sys
+        url, key = "https://abcdefghijklmnopqrst.supabase.co", "sb_publishable_test"
+        dst, _ = self.run_script("--help")
+        wr = os.path.join(dst, "wrangler.toml")
+        t = open(wr, encoding="utf-8").read().rstrip("\n") + (
+            '\n\n# 허브 로그인 주소(scripts/cf_mcp.mjs fill이 관리한다). 허브에서 한 번 로그인하면 이 앱에서도 편집된다.\n[vars]\nHUB_URL = "https://hub.woongstudio.com"\n'
+            '\n# >>> 내 도메인 주소 (scripts/cf_mcp.mjs fill이 관리한다. 손으로 고치지 않는다)\n[[routes]]\npattern = "a.woongstudio.com"\ncustom_domain = true\n# <<< 내 도메인 주소\n')
+        open(wr, "w", encoding="utf-8").write(t)
+        for _ in range(2):
+            subprocess.run([sys.executable, "scripts/use_supabase.py", "--url", url, "--key", key], cwd=dst, check=True, capture_output=True)
+        toml = open(wr, encoding="utf-8").read()
+        self.assertNotIn("HUB_URL", toml)
+        self.assertIn('pattern = "a.woongstudio.com"', toml)
+        self.assertEqual(toml.count("[vars]"), 1)
+        self.assertIn(f'SUPABASE_URL = "{url}"', toml)
+
     def test_refuses_secret_key(self):
         _, p = self.run_script("--url", "https://abcdefghijklmnopqrst.supabase.co", "--key", "sb_secret_nope")
         self.assertNotEqual(p.returncode, 0)

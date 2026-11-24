@@ -15,7 +15,12 @@ const sync = createDocSync({
     showCount(doc.memo);
   },
   status(text) { $('saveState').textContent = text; },
-  needToken({ firstTime, minLength } = {}) {
+  needToken({ firstTime, minLength, hubLogin } = {}) {
+    if (hubLogin) { // 허브 로그인: 로그인한 뒤 이 화면으로 돌아온다
+      $('hubLogin').href = hubLogin + '&return=' + encodeURIComponent(location.href);
+      $('hubLoginBox').hidden = false; $('tokenForm').hidden = true;
+      return;
+    }
     // 처음이면 "정하기", 아니면 "입력". 정한 암호는 이 기기에 기억된다.
     $('tokenLabel').textContent = firstTime ? '편집 암호 정하기' : '편집 암호';
     $('tokenIn').autocomplete = firstTime ? 'new-password' : 'current-password';
