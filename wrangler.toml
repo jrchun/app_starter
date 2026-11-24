@@ -5,6 +5,8 @@
 name = "my-app"
 main = "./src/worker.js"
 compatibility_date = "2026-11-01"
+# 옛 workers.dev 주소도 계속 연다. 아래 [[routes]](내 도메인 주소)를 넣으면 Cloudflare가 workers.dev를 끄기 때문에 꼭 적어 둔다.
+workers_dev = true
 send_metrics = false
 
 # 정적 파일. 요청과 맞는 파일이 있으면 Worker를 거치지 않고 바로 보낸다. 없을 때만 src/worker.js가 실행된다.
@@ -20,3 +22,5 @@ database_id = "__D1_DATABASE_ID__"
 # 예약 작업(src/jobs.js). UTC 기준: 매일 07:30 KST. 무료 플랜은 계정 전체에서 Cron Trigger 5개까지다.
 [triggers]
 crons = ["30 22 * * *"]
+
+# 내 도메인 주소(https://<앱이름>.<내 도메인>)는 fill이 CLAUDE.md의 "내 도메인:" 줄을 보고 맨 아래에 [[routes]]로 넣는다.

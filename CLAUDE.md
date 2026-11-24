@@ -10,6 +10,9 @@
 **새 앱을 만들거나 배포하라는 요청이면 먼저 `docs/AGENT_SETUP.md`를 읽고 그 순서를 따른다.** (Codex 등은 `AGENTS.md`)
 Cloudflare·Supabase 연결은 MCP(브라우저 로그인)로 한다. **API 토큰을 만들게 하지 않는다.** 앱마다 사용자 계정의 GitHub 저장소가 있고, `main`에 올리면 Cloudflare가 자동 배포한다.
 
+내 도메인: woongstudio.com
+- 앱 주소는 `https://<앱이름>.<내 도메인>`(예: `gym-log.woongstudio.com`). 이 줄 한 곳에만 둔다. `cf_mcp.mjs fill`이 읽어 `wrangler.toml`에 넣고, Cloudflare가 DNS·인증서를 자동으로 만든다. 옛 `workers.dev` 주소도 예비로 계속 열린다. 비어 있으면(`(아직 없음)`) `workers.dev` 주소만 쓴다. 이 틀을 다른 사람이 복사해 쓰면 `(아직 없음)`으로 비우거나 자기 도메인으로 바꾼다(도메인은 같은 Cloudflare 계정에 있어야 한다). 자세한 것은 `docs/DOMAIN.md`.
+
 허브 주소: https://hub.tedcheon.workers.dev
 - 앱 허브(만든 앱들을 모아 보여 주는 페이지)의 주소. 이 줄 한 곳에만 둔다. 비어 있으면(`(아직 없음)`) 허브 등록을 건너뛴다(`docs/AGENT_SETUP.md` 7절). 이 틀을 다른 사람이 복사해 쓰면 `(아직 없음)`으로 비우거나 자기 허브 주소로 바꾼다.
 
@@ -19,7 +22,7 @@ Cloudflare·Supabase 연결은 MCP(브라우저 로그인)로 한다. **API 토�
 - `src/worker.js`: `/api/*`만 처리. 새 API는 `src/api/<이름>.js`에 `GET/PUT/POST/DELETE`를 만들고 `ROUTES`에 추가.
 - `src/jobs.js`: 예약 작업(매일 등). `wrangler.toml`의 `[triggers] crons`(UTC) 시각에 Worker 안에서 돈다. 토큰·GitHub Actions 없음. 무료 플랜은 계정 전체 Cron 5개.
 - `db/schema.sql`: D1 스키마(`CREATE TABLE IF NOT EXISTS`만). 바꾸면 `node scripts/cf_mcp.mjs prepare`로 만든 코드를 Cloudflare MCP `execute`로 실행해 적용.
-- `scripts/cf_mcp.mjs`: Cloudflare MCP `execute`에 넘길 코드를 만든다(`address`·`prepare`·`fill`·`connect`·`status`, 예비 `deploy`). 순서는 `docs/AGENT_SETUP.md` 2·5~7. 실제로 Cloudflare에서 도는 코드는 `scripts/cf_mcp/remote.js`(혼자 완결된 함수만, 테스트는 가짜 Cloudflare로).
+- `scripts/cf_mcp.mjs`: Cloudflare MCP `execute`에 넘길 코드를 만든다(`address`·`prepare`·`fill`·`connect`·`domain`·`status`, 예비 `deploy`). 순서는 `docs/AGENT_SETUP.md` 2·5~7. 실제로 Cloudflare에서 도는 코드는 `scripts/cf_mcp/remote.js`(혼자 완결된 함수만, 테스트는 가짜 Cloudflare로).
 - Supabase 모드: `supabase/schema.sql`(RLS 필수), `scripts/use_supabase.py`가 `examples/supabase/web`의 로그인 예제로 화면을 바꾸고 `wrangler.toml` `[vars]`에 주소·공개 키를 넣는다. 화면에는 publishable 키만 넣는다.
 - `wrangler.toml`: Worker 설정의 기준. 배포 절차와 함정은 `docs/SETUP.md`.
 
@@ -40,5 +43,5 @@ Cloudflare·Supabase 연결은 MCP(브라우저 로그인)로 한다. **API 토�
 ## 실행
 - 로컬: `cp .dev.vars.example .dev.vars && npx wrangler@4 d1 execute <이름> --local --file db/schema.sql && npx wrangler@4 dev` (예약 작업 시험: `--test-scheduled` 후 `/__scheduled`)
 - 테스트: `npm test`
-- 배포 확인: `npm run check -- https://<이름>.<계정>.workers.dev`
-- Cloudflare 준비·연결: `node scripts/cf_mcp.mjs prepare --name <저장소 이름>` → 생긴 `.wrangler/mcp/prepare.js`를 MCP `execute`로 → `fill` → PR Merge → `connect`(GitHub 번호는 `gh api -X GET search/repositories`)
+- 배포 확인: `npm run check -- https://<이름>.<내 도메인>` (내 도메인이 없으면 `https://<이름>.<계정>.workers.dev`)
+- Cloudflare 준비·연결: `node scripts/cf_mcp.mjs prepare --name <저장소 이름>` → 생긴 `.wrangler/mcp/prepare.js`를 MCP `execute`로 → `fill`(내 도메인 주소도 넣음) → PR Merge → `connect`(GitHub 번호는 `gh api -X GET search/repositories`) → 첫 배포 뒤 `domain`으로 주소가 붙었는지 확인

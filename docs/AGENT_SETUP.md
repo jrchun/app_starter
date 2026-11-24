@@ -62,7 +62,8 @@
    - **D1 모드(기본)**: 나 혼자, 또는 편집 암호를 아는 몇 명이 같은 데이터를 함께 쓴다. 로그인 없음. 읽기는 공개.
    - **Supabase 모드**: 사람마다 로그인하고 **자기 데이터만** 본다. 무료 플랜은 계정당 프로젝트 **2개**까지(일시 정지한 것은 세지 않음).
 4. **사이트 주소**: "이 주소로 됩니다"라고 보여 주고 확인받는다. 기획 요약을 보여 주기 **전에** `node scripts/cf_mcp.mjs address --name <앱이름>` → `execute`(읽기만 함)로 알아본다.
-   - 주소는 `https://<앱이름>.<계정 이름>.workers.dev`다. 앱 이름은 기본으로 **저장소 이름**을 쓰고(영문 소문자·숫자·하이픈으로 맞춘다), Worker 이름·D1 이름이 된다. 기획자가 다른 앱 이름을 원하면 그 이름을 쓴다.
+   - **내 도메인이 있으면**(`CLAUDE.md`의 "내 도메인:" 줄) 주소는 `https://<앱이름>.<내 도메인>`이다(예: `https://gym-log.woongstudio.com`). `address` 결과의 `url`이 그 주소이고, `workers_dev_url`은 예비 주소다. 기획 요약에는 `url`만 보여 준다. 계정 이름(아래)은 예비 주소에만 쓰이므로 이미 있으면 따로 말하지 않는다.
+   - 내 도메인이 없으면 주소는 `https://<앱이름>.<계정 이름>.workers.dev`다. 앱 이름은 기본으로 **저장소 이름**을 쓰고(영문 소문자·숫자·하이픈으로 맞춘다), Worker 이름·D1 이름이 된다. 기획자가 다른 앱 이름을 원하면 그 이름을 쓴다.
    - `account_subdomain`이 있으면: 계정 이름은 이미 정해져 있다(AI가 바꾸지 않는다. 바꾸려면 사람이 대시보드 › Workers 및 Pages › Your subdomain › Change, 모든 앱 주소가 바뀜). 예: "사이트 주소는 `https://gym-log.tedcheon.workers.dev`가 됩니다." `name_taken_in_account: true`면 같은 이름의 앱이 이미 있으니 다른 앱 이름을 제안한다.
    - `account_subdomain`이 없으면(처음 쓰는 계정): `proposals`의 후보(GitHub 아이디 기반)를 보여 주고 고르게 한다. "계정 이름은 한 번 정하면 바꿀 수 없고 앞으로 만드는 모든 앱 주소에 들어갑니다"를 꼭 덧붙인다. 기획자가 원하는 이름을 직접 말해도 된다.
 5. 매일 작업이 필요한지(필요 없으면 `crons = []`로 끈다. 무료 플랜은 계정 전체 5개)
@@ -98,7 +99,7 @@
    - 처음 쓰는 계정이면 2절에서 확인받은 계정 이름을 넘긴다: `prepare --name <앱이름> --subdomain <확인받은 계정 이름>`. 계정 이름은 이때 만들어진다(대시보드를 거치지 않는다).
    - 계정 이름이 이미 있으면 `--subdomain`을 넘겨도 무시하고 절대 바꾸지 않는다(바꾸면 기존 앱 주소가 전부 달라진다).
    - `subdomain: null`이 오면(다른 사람이 쓰는 이름 등) 기획자에게 다른 이름을 받아 다시 실행한다. 확인받지 않은 이름으로 만들지 않는다.
-3. `node scripts/cf_mcp.mjs fill --name <앱이름> --database-id <위의 database_id>` → `wrangler.toml`이 채워진다. 커밋한다.
+3. `node scripts/cf_mcp.mjs fill --name <앱이름> --database-id <위의 database_id>` → `wrangler.toml`이 채워진다. 내 도메인이 있으면 맨 아래에 `[[routes]]`(내 도메인 주소)도 들어간다(`--no-domain`이면 빼고 workers.dev만). 커밋한다.
 - 표를 바꿨으면 1~2를 다시 한다(`CREATE TABLE IF NOT EXISTS`만 쓰므로 안전).
 
 ### Supabase 모드 (Supabase MCP)
@@ -133,6 +134,7 @@
    - Worker가 없으면 "배포 준비 중" 자리 표시 Worker를 만들고, 저장소를 연결하고, 첫 빌드를 시작한다.
    - 다시 실행해도 안전하다. 이미 연결돼 있으면(`already_connected: true`) 연결은 건너뛰고 빌드만 다시 시작한다.
 3. 결과가 `ok: true`면 1~2분 뒤 `cf_mcp.mjs status`로 `git_build`가 성공인지 보고 7절대로 검사한다.
+   - 내 도메인이 있으면 첫 빌드가 `wrangler.toml`의 `[[routes]]`로 주소를 붙인다. 빌드 뒤 `node scripts/cf_mcp.mjs domain` → `execute`로 붙었는지 확인한다(`already: true`면 됨, 안 붙었으면 이 명령이 붙인다). 실패 이유는 `docs/DOMAIN.md` 함정.
 4. `ok: false`면 `step`과 `note`를 보고 아래 사람 경로로 넘어간다.
    - `권한`: 커넥터에 Workers CI 권한이 없다. 사람에게 커넥터를 다시 연결하며 허용해 달라고 하거나, 이번엔 사람 경로로 한다.
    - `배포용 토큰`·`연결`: 이 계정(또는 GitHub 계정)에서 처음 하는 연결이다. 사람 경로로 한 번 하면 다음 앱부터는 AI가 할 수 있다.
@@ -166,21 +168,22 @@ Cloudflare 연결(6-2) 전에 화면을 먼저 띄워 보고 싶을 때, 또는 
 
 ## 7. 확인하고 보고하기
 
-1. `node scripts/check_site.mjs https://<앱이름>.<하위도메인>.workers.dev`: 모든 항목이 ok여야 한다. 프록시 뒤라면 `NODE_USE_ENV_PROXY=1`을 붙인다. 이 검사는 모드를 스스로 알아본다.
+1. `node scripts/check_site.mjs <사이트 주소>`(내 도메인 주소, 없으면 `https://<앱이름>.<하위도메인>.workers.dev`): 모든 항목이 ok여야 한다. 프록시 뒤라면 `NODE_USE_ENV_PROXY=1`을 붙인다. 이 검사는 모드를 스스로 알아본다.
 2. 브라우저로 실제 주소를 폰 폭(400px) 라이트·다크로 열어 본다.
 3. `node scripts/cf_mcp.mjs status` → `execute`: 예약 작업 시각, Git 자동 배포 결과.
 4. 보고에 넣을 것: 사이트 주소, Merge한 PR 링크, 사람이 폰에서 할 것(D1: 아무 값이나 고치고 **편집 암호 정하기**(처음 한 번) → "저장됨" / Supabase: 가입 → 메모 추가 → 다른 계정에서는 안 보임), 자동 배포 연결 여부.
 5. `docs/SETUP.md`의 "함정" 중 이번에 실제로 겪은 것이 있으면 사용자에게 알린다. 새로 겪은 함정이면 그 문서에 추가를 제안한다.
 6. **첫 배포에 성공하면** `web/app.json`의 `status`를 `운영중`으로, `updatedAt`을 오늘 날짜로 바꿔 PR → Merge한다(작은 변경이라 바로 합친다).
 7. **허브 등록 (허브 주소가 있을 때만):** 허브 주소는 `CLAUDE.md`의 "허브 주소" 줄 한 곳에 있다. 비어 있으면(`(아직 없음)`) 건너뛴다.
-   - `curl -sS -X POST <허브 주소>/api/register -H 'Content-Type: application/json' -d '{"url":"<앱 주소>"}'`. 비밀값은 필요 없다(허브가 앱 주소와 `app.json`을 직접 읽어 확인한다).
+   - `curl -sS -X POST <허브 주소>/api/register -H 'Content-Type: application/json' -d '{"url":"<앱 주소>"}'`. 비밀값은 필요 없다(허브가 앱 주소와 `app.json`을 직접 읽어 확인한다). 앱 주소는 대표 주소(내 도메인 주소)를 넣는다.
+   - 예전에 workers.dev 주소로 등록한 앱을 내 도메인으로 옮겼으면 `{"url":"<새 주소>","replaces":"<옛 주소>"}`로 보낸다. 허브가 두 주소가 같은 앱인지 확인하고 옛 줄을 새 주소로 바꾼다(`docs/DOMAIN.md`).
    - 허브 주소가 없거나 요청이 실패해도 **앱 배포는 성공으로 처리**하고, 보고에 "허브 등록은 건너뜀(이유)" 한 줄만 적는다. 사람을 부르지 않는다.
 
 ## 8. 클라우드 세션(claude.ai/code)에서 할 때
 
 클라우드 세션의 컨테이너는 정해진 주소에만 나갈 수 있다. 처음 배포하는 앱이면 이렇게 한다.
 - 새 세션은 보통 기본(Default) 환경에서 시작한다. 사이트 주소는 5번 `prepare` 결과(`url`)로 미리 알 수 있으니, **그때 바로** 아래처럼 허용을 요청한다(나중에 작업을 끊지 않게).
-- **사이트 검사가 막히면**(`check_site.mjs`가 `fetch failed`, 프록시 403): 환경 도구(`get_environment` → 기본 환경이면 `create_environment`)로 **이 저장소 전용 개인 환경**을 만들고 허용 호스트에 `<앱이름>.<하위도메인>.workers.dev`만 넣는다. 사람이 승인 창에서 허락하면 이 세션에 바로 적용된다. 다른 저장소와 함께 쓰는 기본 환경은 건드리지 않는다.
+- **사이트 검사가 막히면**(`check_site.mjs`가 `fetch failed`, 프록시 403): 환경 도구(`get_environment` → 기본 환경이면 `create_environment`)로 **이 저장소 전용 개인 환경**을 만들고 허용 호스트에 사이트 주소의 호스트(`<앱이름>.<내 도메인>`, 없으면 `<앱이름>.<하위도메인>.workers.dev`)만 넣는다. 사람이 승인 창에서 허락하면 이 세션에 바로 적용된다. 다른 저장소와 함께 쓰는 기본 환경은 건드리지 않는다.
 - **Cloudflare API(api.cloudflare.com), `wrangler`는 컨테이너에서 쓰지 않는다.** 모든 Cloudflare 작업은 MCP `execute`로 한다. MCP 실행 환경도 Cloudflare API 밖(사이트 주소 포함)으로는 나갈 수 없으므로, 사이트 검사는 컨테이너에서 한다.
 - **Supabase**: 저장소 `.mcp.json`의 연결은 실패할 수 있다. claude.ai의 Supabase 커넥터(도구 이름 `mcp__Supabase__...`)를 쓴다. 둘 다 없으면 사람에게 claude.ai 설정 › 커넥터에서 Supabase를 연결해 달라고 한다.
 - 화면 확인은 컨테이너의 Playwright로 한다(사이트 주소가 허용된 뒤).
