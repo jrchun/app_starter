@@ -13,7 +13,7 @@ Cloudflare·Supabase 연결은 MCP(브라우저 로그인)로 한다. **API 토�
 내 도메인: woongstudio.com
 - 앱 주소는 `https://<앱이름>.<내 도메인>`(예: `gym-log.woongstudio.com`). 이 줄 한 곳에만 둔다. `cf_mcp.mjs fill`이 읽어 `wrangler.toml`에 넣고, Cloudflare가 DNS·인증서를 자동으로 만든다. 옛 `workers.dev` 주소도 예비로 계속 열린다. 비어 있으면(`(아직 없음)`) `workers.dev` 주소만 쓴다. 이 틀을 다른 사람이 복사해 쓰면 `(아직 없음)`으로 비우거나 자기 도메인으로 바꾼다(도메인은 같은 Cloudflare 계정에 있어야 한다). 자세한 것은 `docs/DOMAIN.md`.
 
-허브 주소: https://hub.tedcheon.workers.dev
+허브 주소: https://hub.woongstudio.com
 - 앱 허브(만든 앱들을 모아 보여 주는 페이지)의 주소. 이 줄 한 곳에만 둔다. 비어 있으면(`(아직 없음)`) 허브 등록을 건너뛴다(`docs/AGENT_SETUP.md` 7절). 이 틀을 다른 사람이 복사해 쓰면 `(아직 없음)`으로 비우거나 자기 허브 주소로 바꾼다.
 
 ## 구성
