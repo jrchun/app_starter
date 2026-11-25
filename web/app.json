@@ -1,7 +1,6 @@
 {
   "schema": 1,
   "name": "내 앱",
-  "emoji": "🧩",
   "summary": "한 줄 설명",
   "category": "기타",
   "status": "개발중",

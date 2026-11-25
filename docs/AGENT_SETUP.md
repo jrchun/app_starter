@@ -69,7 +69,7 @@
 5. 매일 작업이 필요한지(필요 없으면 `crons = []`로 끈다. 무료 플랜은 계정 전체 5개)
 
 **확인받으면 바로 `web/app.json`(앱 허브용 자기소개서, `docs/HUB.md`)을 채운다.** 사람에게 따로 묻지 않는다.
-- `name`·`emoji`·`summary`: 기획 요약의 앱 이름, 어울리는 이모지 하나, 한 줄 설명
+- `name`·`summary`: 기획 요약의 앱 이름, 한 줄 설명(이모지는 넣지 않는다)
 - `category`: `생활`, `건강`, `돈`, `모임`, `업무`, `기타` 중 하나
 - `mode`: `d1` 또는 `supabase`(Supabase 모드는 `use_supabase.py`가 바꿔 준다), `repo`: `소유자/저장소`, `createdAt`: 오늘(`YYYY-MM-DD`)
 - `status`: `개발중`, `public`: `true`(기획자가 "남에게 안 보여 줄 앱"이라고 했으면 `false`. 허브에서 링크만 숨기는 표시이고 보안 장치가 아니다), `updatedAt`: 비워 둔다

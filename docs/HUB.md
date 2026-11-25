@@ -14,14 +14,14 @@
 ### `web/app.json`
 
 ```json
-{ "schema": 1, "name": "내 앱", "emoji": "🧩", "summary": "한 줄 설명", "category": "기타",
+{ "schema": 1, "name": "내 앱", "summary": "한 줄 설명", "category": "기타",
   "status": "개발중", "public": true, "mode": "d1", "repo": "소유자/저장소", "createdAt": "2026-11-15", "updatedAt": "" }
 ```
 
 | 필드 | 뜻 | 값 |
 |---|---|---|
 | `schema` | 형식 버전. 필드가 바뀔 때 허브가 구분한다 | 지금은 `1` |
-| `name` / `emoji` / `summary` | 카드의 이름, 아이콘, 한 줄 설명 | 기획 요약에서 |
+| `name` / `summary` | 카드의 이름, 한 줄 설명 | 기획 요약에서 |
 | `category` | 분류 | `생활`, `건강`, `돈`, `모임`, `업무`, `기타` |
 | `status` | 앱 상태 | `개발중`(만드는 중), `운영중`(첫 배포 성공 뒤), `중단` |
 | `public` | `false`면 허브가 카드만 보여 주고 링크는 숨긴다 | `true` / `false` |
@@ -29,6 +29,7 @@
 | `repo` | GitHub 저장소 | `소유자/저장소` |
 | `createdAt` / `updatedAt` | 만든 날, 마지막으로 크게 바꾼 날 | `YYYY-MM-DD` |
 
+- **이모지는 넣지 않는다**(예전 `emoji` 칸은 없앴다. 허브도 표시하지 않는다). 그림이 없으면 허브가 이름 첫 글자를 보여 준다.
 - **`public: false`는 보안 장치가 아니다.** 허브 화면에서 링크를 숨기는 표시일 뿐이다. `app.json`도 앱도 주소를 아는 사람은 누구나 볼 수 있다.
 - 큰 기능을 바꾸면 `updatedAt`을 그날로 고친다. 화면이 크게 바뀌면 `og.png`도 다시 찍는다.
 

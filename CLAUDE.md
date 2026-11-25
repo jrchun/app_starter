@@ -28,6 +28,7 @@ Cloudflare·Supabase 연결은 MCP(브라우저 로그인)로 한다. **API 토�
 
 ## 지켜야 할 것
 - 화면은 빌드 없는 정적 파일. React·번들러·CSS 프레임워크를 들이지 않는다. 외부 스크립트는 글꼴(Google Fonts)만.
+- **이모지를 쓰지 않는다**: 화면, 문구, 자기소개서(`app.json`), 문서, 커밋·PR까지. AI가 만든 티가 난다. 아이콘이 필요하면 글자, 일반 기호(✕ 등), 직접 그린 SVG로.
 - 색은 `web/styles.css`의 CSS 변수만 쓴다. **라이트·다크와 폰 폭 400px을 매번 확인**한다(가로 스크롤 없음).
 - 읽기는 누구나, 쓰기는 편집 권한이 있어야 한다. **허브 로그인**(D1 모드 + 내 도메인 + 같은 도메인의 허브, `wrangler.toml` `HUB_URL`): 허브에서 한 번 로그인하면 내 앱 전부 편집(`docs/HUB.md` "허브 로그인"). 그 밖의 앱은 사람이 사이트에서 처음 저장할 때 편집 암호를 화면에서 정한다(D1 `settings`에 해시로 저장, `src/api/password.js`). 대시보드 Secret `WRITE_TOKEN`은 어느 경우든 통한다(비상용). 암호 원문을 채팅·저장소에 두지 않는다.
 - 모르는 외부 API 사양은 추측하지 말고 공식 문서를 확인한다(Cloudflare 문서는 `https://developers.cloudflare.com/<경로>/index.md`로 마크다운을 받을 수 있다).
